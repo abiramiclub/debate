@@ -1,0 +1,127 @@
+{
+  "project": {
+    "name": "Honeybee Deliberation Mediator",
+    "working_names": {
+      "deterministic_layer": "Karpaty Wiki / Honeybee Constitution",
+      "probabilistic_layer": "Vicky (mediator)"
+    },
+    "owner": "Abirami Club",
+    "one_line": "A Slack agent that makes group deliberation fairer and groupthink-resistant by mediating (not debating): a deterministic honeybee-derived constitution conducts the process while a probabilistic mediator performs only the language tasks it invokes.",
+    "hackathon": {
+      "name": "Slack Agent Builder Challenge",
+      "track": "Slack Agent for Good",
+      "track_note": "For Good requires a measurable social benefit; project is still a NEW Slack agent. One track per submission; one prize per project.",
+      "deadline": "2026-07-13T17:00:00-07:00",
+      "required_tech_used": ["MCP server integration (core)", "Real-Time Search API (info injection)"],
+      "submission_artifacts": ["text description", "~3-min demo video", "architecture diagram", "Slack developer sandbox URL"]
+    }
+  },
+
+  "thesis": {
+    "core": "Most agents make Slack faster at answering; this makes Slack better at deciding. Group decisions are what Slack uniquely owns.",
+    "design_decision": "Agent MEDIATES, never debates. Putting agents into the debate reproduces sycophancy / last-speaker drift / echo chambers (arXiv 2506.11825). Mediation beats direct debate (Habermas Machine, Science 2024).",
+    "framing_discipline": "Fairness = process, never outcome. Elections are the motivating example, never the headline. Never let the agent hold a topic position."
+  },
+
+  "deterministic_probabilistic_split": {
+    "rule_of_thumb": "Must be fair/auditable/reproducible -> deterministic constitution. Requires understanding natural language -> probabilistic mediator, but its outputs are always selected/bounded by the constitution.",
+    "template": "Habermas Machine: generative model (prob) + reward model (prob) + Schulze-method selection (deterministic).",
+    "deterministic": ["protocol state machine", "bridging-based ranking / quorum", "anti-sycophancy weighting", "info-injection gate", "audit log", "position-neutrality check"],
+    "probabilistic": ["read/summarize opinions", "generate common-ground candidates", "predict per-person agreement", "steelman minority", "semantic echo detection"]
+  },
+
+  "architecture": {
+    "layers": {
+      "humans": "Anonymized participants; submit private reads + confidence, discuss, receive debrief.",
+      "slack_surface": "Channels/threads, DMs + modals (Block Kit), consent gate, neutral handles.",
+      "engine_mcp_server": "Hosts both sublayers; exposed to the Slack agent as an MCP server.",
+      "deterministic_constitution": "See HONEYBEE_CONSTITUTION.md. Conducts the process; owns fairness guarantees.",
+      "probabilistic_mediator_vicky": "LLM language tasks invoked by the constitution.",
+      "knowledge_and_data": "Karpaty wiki (sources -> distilled rules; runtime-citable; surfaced as Slack Canvas), anonymization map, pre/post position logs.",
+      "external": "Real-Time Search API for vetted/sourced info injection."
+    },
+    "control_loop": "humans -> slack -> MCP -> [constitution conducts -> invokes mediator for language -> deterministic aggregation/selection -> quorum] -> slack -> debrief",
+    "diagram_file": "architecture_v1.mermaid"
+  },
+
+  "mcp_tools_deterministic": [
+    {"name": "start_session", "does": "create session, assign neutral handles, record consent"},
+    {"name": "store_read", "does": "store a participant private position + confidence (pre-reveal)"},
+    {"name": "rank_bridging", "does": "compute group-informed/bridging score over candidate statements; return winner"},
+    {"name": "check_quorum", "does": "evaluate quorum threshold + cross-inhibition precondition"},
+    {"name": "log_event", "does": "append immutable JSONL audit line"},
+    {"name": "get_audit", "does": "return audit trail for debrief"}
+  ],
+
+  "mediator_functions_probabilistic": [
+    {"name": "synthesize_candidates", "does": "generate N common-ground statements from reads (default N=8)"},
+    {"name": "predict_agreement", "does": "estimate each participant's agreement per candidate (feeds rank_bridging)"},
+    {"name": "steelman_minority", "does": "generate strongest version of least-supported credible view"},
+    {"name": "detect_echo", "does": "classify whether a thread intensifies with no new info; returns bool + reason"}
+  ],
+
+  "tech_stack": {
+    "slack_app": "NEW app via `slack create agent` (Bolt, Python) in Slack Developer Program sandbox; dev via `slack run` (socket mode, hot reload).",
+    "engine": "MCP server wrapping the constitution + mediator.",
+    "llm_backends_reused": {
+      "cloud_claude": "OpenClaw cloud hosting — use for reliable demo-time synthesis.",
+      "local_qwen": "OpenClaw on local machine (qwen3:14b) — on-brand/low-cost variant.",
+      "principle": "Run the echo-chamber FOIL agents on a DIFFERENT base model than the mediator so diversity is real, not correlated."
+    },
+    "alt_deploy": "Slack 'Add to Slack' path can front the existing OpenClaw-cloud backend without relocating it.",
+    "data": "JSONL audit; server-side anonymization map; pre/post position logs.",
+    "reuse_vs_new": "REUSE: OpenClaw backends + LLM endpoints. NEW: Slack app, MCP constitution server, protocol logic."
+  },
+
+  "metrics": {
+    "information_uptake_score": "Correlation of position/confidence change (pre vs post) with injected evidence.",
+    "echo_index": "Attitude intensification with no new information entering (the arXiv 2506.11825 failure made measurable)."
+  },
+
+  "demo": {
+    "format": "Recorded ~3 min, controlled run (do not gamble on live unknown-N).",
+    "story": "Show FOIL (seeded all-AI debate echo-chambering) -> switch mediator on -> show de-polarization -> debrief metrics.",
+    "tip": "Strongest material in first 3 minutes; judges may stop at 3."
+  },
+
+  "build_phases": [
+    {"phase": 0, "days": "1-2", "goal": "Setup", "tasks": ["join Slack Developer Program (sandbox)", "slack create agent (Python)", "slack run hello-world", "repo with constitution/ + mediator/ split", "point mediator at existing OpenClaw backends"], "exit": "agent responds in sandbox; two-package split"},
+    {"phase": 1, "days": "3-6", "goal": "Deterministic core + MCP", "tasks": ["distill 5 constitution rules", "protocol state machine", "bridging-based ranking", "anti-sycophancy weighting", "JSONL audit", "wrap as MCP server"], "exit": "scripted session runs end-to-end via MCP; MCP requirement satisfied"},
+    {"phase": 2, "days": "7-11", "goal": "Probabilistic mediator (Vicky)", "tasks": ["synthesize_candidates", "predict_agreement -> rank_bridging", "steelman_minority", "detect_echo"], "exit": "constitution-selected common-ground statement + minority steelman, selection traceable to deterministic ranker"},
+    {"phase": 3, "days": "12-15", "goal": "Slack depth", "tasks": ["anonymization + handles", "private-read DM/modal flow", "Block Kit rounds/quorum", "consent gate"], "exit": "small live session completes in sandbox"},
+    {"phase": 4, "days": "16-18", "goal": "RTS injection + foil", "tasks": ["RTS vetted info injection (logged sources)", "information_uptake metric", "seeded echo-chamber foil"], "exit": "foil echo-chambers; mediated run does not; metrics quantify"},
+    {"phase": 5, "days": "19-22", "goal": "Metrics/debrief/hardening", "tasks": ["debrief Block Kit view", "N-agnostic test (3/6/10)", "edge cases"], "exit": "clean runs at 3 sizes; no crashes"},
+    {"phase": 6, "days": "23-24+buffer", "goal": "Ship", "tasks": ["record controlled demo", "finalize diagram", "writeup (prepared framing)", "submit"], "exit": "submitted with all 4 artifacts"}
+  ],
+
+  "decisions_locked": [
+    "Mediator, not debater.",
+    "Deterministic constitution conducts; probabilistic mediator executes.",
+    "Anonymity = consensual blind (opt-in, debrief after).",
+    "Track = Agent for Good (still a new Slack agent).",
+    "Tech = MCP (core) + Real-Time Search (injection).",
+    "Reuse OpenClaw backends; new Slack app + MCP constitution.",
+    "Bridging-based ranking is the fairness guarantee.",
+    "Karpaty wiki is a first-class component (runtime-citable + Slack Canvas), not scaffolding."
+  ],
+
+  "open_decisions": [
+    {"id": "mediator_visibility", "question": "Visible mediator (posts synthesis into channel; stronger demo) vs ambient (private nudges, near-invisible; purer facilitator principle).", "must_resolve_before": "Phase 3"},
+    {"id": "wiki_prominence", "question": "How prominently to surface the Karpaty wiki (submitted artifact only vs live Slack Canvas vs runtime citations on every move)."},
+    {"id": "llm_assignment", "question": "Which backend runs mediator vs foil (keep base models different for real diversity)."}
+  ],
+
+  "risks": [
+    "MCP<->Slack wiring is the least-documented seam; validate in Phase 1, not week 3.",
+    "Demo fragility; mitigate with controlled, replayable, seeded session.",
+    "Local-qwen synthesis latency on camera; pre-warm or use Claude API for the recording.",
+    "Scope creep via the wiki; freeze content at 5 mechanisms for v1.",
+    "'Whose fairness' optics; keep all framing procedural; audit log is the defense."
+  ],
+
+  "companion_files": [
+    {"file": "HONEYBEE_CONSTITUTION.md", "purpose": "the deterministic rules (drop into repo; reference from agent)"},
+    {"file": "architecture_v1.mermaid", "purpose": "architecture diagram (deterministic gold / probabilistic blue)"},
+    {"file": "BUILD_PLAN_v1.md", "purpose": "phased build plan with exit checks and risks"}
+  ]
+}

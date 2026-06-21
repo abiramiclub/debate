@@ -1,0 +1,62 @@
+%% Architecture v1 — Bee-Constitution Deliberation Mediator (Slack Agent)
+%% Core thesis: deterministic constitution CONDUCTS; probabilistic mediator EXECUTES language tasks it invokes.
+flowchart TB
+    subgraph HUMANS["👥 Human participants — anonymized"]
+        H1["Submit private read + confidence<br/>(before any reveal)"]
+        H2["Discuss / critique"]
+        H3["Receive debrief + metrics"]
+    end
+
+    subgraph SLACK["💬 Slack surface"]
+        S0["Consent gate + neutral handles<br/>(Birch, Maple, Cedar...)"]
+        S1["Channels / threads"]
+        S2["DMs + modals (Block Kit)"]
+    end
+
+    subgraph ENGINE["⚙️ MCP server — the engine"]
+        direction TB
+        subgraph DET["🔒 DETERMINISTIC — Honeybee Constitution (the wiki)"]
+            D1["Protocol state machine<br/>COLLECT → REVEAL → CROSS-INHIBITION → QUORUM"]
+            D2["Bridging-based ranking<br/>cross-group consensus = fairness guarantee"]
+            D3["Anti-sycophancy weighting<br/>recency down · minority up · phase-tuned"]
+            D4["Quorum threshold (N-agnostic)"]
+            D5["JSONL audit log"]
+        end
+        subgraph PROB["🎲 PROBABILISTIC — Mediator 'Vicky'"]
+            P1["Synthesize common-ground candidates"]
+            P2["Predict per-person agreement"]
+            P3["Steelman the minority"]
+            P4["Semantic echo detection"]
+        end
+    end
+
+    KNOW["📚 Honeybee studies wiki<br/>→ distilled rules (5 for v1)"]
+    DATA["🗄️ Anonymization map<br/>+ pre/post position logs"]
+    RTS["🌐 Real-Time Search API<br/>vetted, sourced info injection"]
+
+    %% --- flows ---
+    S0 --> H1
+    H1 --> S2
+    H2 --> S1
+    S1 --> ENGINE
+    S2 --> ENGINE
+
+    KNOW --> DET
+    D1 -->|"invokes for language work"| PROB
+    P1 --> D2
+    P2 --> D2
+    D3 --> D2
+    D2 --> D4
+    P4 -->|"echo flag"| D1
+    RTS -->|"inject new info"| D1
+
+    D4 -->|"quorum reached"| S1
+    D1 --> D5
+    ENGINE --> DATA
+    D5 --> H3
+    S1 --> H3
+
+    classDef det fill:#fde68a,stroke:#b45309,color:#1f2937;
+    classDef prob fill:#bfdbfe,stroke:#1d4ed8,color:#1f2937;
+    class D1,D2,D3,D4,D5 det;
+    class P1,P2,P3,P4 prob;

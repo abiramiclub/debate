@@ -1,0 +1,10 @@
+# v0 core runs on the standard library alone — no dependencies required to run
+# `python -m demo.run_session` or the pure-logic tests.
+
+# Dev / test only:
+pytest>=8.0
+
+# Added in later phases (kept here as a roadmap, not yet imported):
+#   slack-bolt        # Phase 0/3: the Slack agent
+#   anthropic         # Phase 2: real Claude-backed mediator
+#   mcp               # Phase 1: wrap the engine as an MCP server

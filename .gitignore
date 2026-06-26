@@ -8,3 +8,7 @@ venv/
 *.jsonl
 !docs/**/*.jsonl
 .DS_Store
+
+# Raw datasets (CC-BY, not redistributed) — download via harness/download_data.sh
+/data/
+harness/results.csv

@@ -22,7 +22,11 @@ from .audit import AuditLog
 from .bridging import cluster_participants, rank_candidates
 from .config import DEFAULT, Config
 from .evidence import Evidence, EvidenceSource
+from .neutrality import advocates_position
 from .weighting import phase_index, raw_support, weighted_support
+
+# Small retry cap for regenerating mediator output that fails the neutrality gate.
+_NEUTRALITY_RETRIES = 2
 
 NEUTRAL_HANDLES = [
     "Birch", "Maple", "Cedar", "Aspen", "Willow", "Hazel",
@@ -127,6 +131,36 @@ class Session:
         self.audit.log(self.state, handle, self._by_handle[handle].actor_type,
                        "store_read", payload={"confidence": confidence, "text": text})
 
+    # --- neutrality gate (constitution↔mediator boundary) --------------------
+    def _gate_candidates(self, candidates: list[str]) -> list[str]:
+        """Keep only candidates that pass the neutrality gate. If a whole batch
+        advocates, regenerate up to the retry cap; rejected candidates are logged
+        and dropped. Never returns empty if any input existed (the engine needs
+        at least one candidate to rank)."""
+        kept = [c for c in candidates if not advocates_position(c)]
+        rejected = [c for c in candidates if advocates_position(c)]
+        attempts = 0
+        while not kept and attempts < _NEUTRALITY_RETRIES:
+            attempts += 1
+            regen = self.mediator.synthesize_candidates(self.reads, self.cfg.N_candidates)
+            kept = [c for c in regen if not advocates_position(c)]
+            rejected += [c for c in regen if advocates_position(c)]
+        for c in rejected:
+            self.audit.log(State.REVEAL, "mediator", "agent", "neutrality_rejected",
+                           payload={"kind": "candidate", "text": c})
+        return kept or candidates  # last resort: proceed (already logged) over crashing
+
+    def _gate_steelman(self, labels: list[int]) -> Optional[str]:
+        """Return a neutral steelman, regenerating up to the retry cap. If it keeps
+        advocating a conclusion, log and drop it (None)."""
+        for _ in range(_NEUTRALITY_RETRIES + 1):
+            text = self.mediator.steelman_minority(self.reads, labels)
+            if not advocates_position(text):
+                return text
+            self.audit.log(State.CROSS_INHIBITION, "mediator", "agent",
+                           "neutrality_rejected", payload={"kind": "steelman", "text": text})
+        return None
+
     # --- REVEAL + rounds -----------------------------------------------------
     def deliberate(self, max_rounds: int = 6,
                    discussion_by_round: Optional[list[list[str]]] = None) -> list[RoundResult]:
@@ -143,8 +177,10 @@ class Session:
                           if discussion_by_round and round_idx < len(discussion_by_round)
                           else [])
 
-            # 1-2. Mediator proposes (the ONLY language work).
-            candidates = self.mediator.synthesize_candidates(self.reads, self.cfg.N_candidates)
+            # 1-2. Mediator proposes (the ONLY language work). Every candidate
+            # passes the deterministic neutrality gate before it can be used.
+            candidates = self._gate_candidates(
+                self.mediator.synthesize_candidates(self.reads, self.cfg.N_candidates))
             agreement = self.mediator.predict_agreement(self.reads, candidates)
             self.audit.log(State.REVEAL, "mediator", "agent", "synthesize+predict",
                            payload={"n_candidates": len(candidates)})
@@ -172,9 +208,10 @@ class Session:
             minority = _minority_present(labels)
             steelman = None
             if minority:
-                steelman = self.mediator.steelman_minority(self.reads, labels)
-                self.audit.log(State.CROSS_INHIBITION, "mediator", "agent",
-                               "steelman_minority", payload={"text": steelman})
+                steelman = self._gate_steelman(labels)
+                if steelman is not None:
+                    self.audit.log(State.CROSS_INHIBITION, "mediator", "agent",
+                                   "steelman_minority", payload={"text": steelman})
 
             # (b) Cross-inhibition trigger: counter-pressure against a fast /
             #     premature consensus in the first reveal round (§1 rule 3).

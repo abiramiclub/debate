@@ -46,16 +46,10 @@ class FixtureEvidenceSource(EvidenceSource):
         return self._evidence
 
 
-def _advocates_position(text: str) -> bool:
-    """Minimal deterministic position-neutrality gate (constitution §5/§7): reject
-    injected text that pushes a conclusion rather than informing. Conservative on
-    purpose — a false positive just rejects one candidate fact and we try again."""
-    t = text.lower()
-    advocacy = [
-        "you should", "we should", "must adopt", "vote for", "the answer is",
-        "clearly the best", "everyone agrees", "obviously", "the right choice is",
-    ]
-    return any(p in t for p in advocacy)
+# The position-neutrality gate is shared across the constitution↔mediator
+# boundary; it lives in constitution.neutrality. Re-exported here (the name the
+# RTS adapter and its tests use) so evidence keeps one import surface.
+from .neutrality import advocates_position as _advocates_position  # noqa: E402
 
 
 class RTSAdapter(EvidenceSource):

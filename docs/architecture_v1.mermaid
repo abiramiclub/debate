@@ -15,14 +15,14 @@ flowchart TB
 
     subgraph ENGINE["⚙️ MCP server — the engine"]
         direction TB
-        subgraph DET["🔒 DETERMINISTIC — Honeybee Constitution (the wiki)"]
+        subgraph DET["🔒 DETERMINISTIC — Constitution (rule set)"]
             D1["Protocol state machine<br/>COLLECT → REVEAL → CROSS-INHIBITION → QUORUM"]
             D2["Bridging-based ranking<br/>cross-group consensus = fairness guarantee"]
-            D3["Anti-sycophancy weighting<br/>recency down · minority up · phase-tuned"]
+            D3["Anti-sycophancy weighting<br/>recency-neutral (structural) · minority up · phase-tuned"]
             D4["Quorum threshold (N-agnostic)"]
             D5["JSONL audit log"]
         end
-        subgraph PROB["🎲 PROBABILISTIC — Mediator 'Vicky'"]
+        subgraph PROB["🎲 PROBABILISTIC — Mediator"]
             P1["Synthesize common-ground candidates"]
             P2["Predict per-person agreement"]
             P3["Steelman the minority"]

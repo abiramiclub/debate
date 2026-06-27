@@ -2,8 +2,8 @@
 
 A Slack agent that makes group deliberation **fairer and groupthink-resistant**.
 It does not debate — it **mediates**. A deterministic "constitution" (rules
-distilled from honeybee collective decision-making) conducts the process, and a
-probabilistic mediator ("Vicky") performs only the language work the
+distilled from collective decision-making in honeybee swarms) conducts the
+process, and a probabilistic **mediator** performs only the language work the
 constitution invokes.
 
 > Humans deliberate. The constitution owns every fairness guarantee (auditable).

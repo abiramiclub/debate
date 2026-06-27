@@ -8,7 +8,7 @@
 
 ## The one-paragraph spec
 
-A Slack agent that makes group deliberation fairer and groupthink-resistant. It does **not** debate. It **mediates**: a deterministic "constitution" (rules distilled from honeybee collective-decision biology) conducts the process, and a probabilistic mediator ("Vicky") performs the language work the constitution invokes — synthesizing common ground, steelmanning the minority, detecting echo. Humans do the deliberating. The constitution owns every fairness guarantee (auditable); the mediator owns understanding and phrasing (never trusted to be fair on its own).
+A Slack agent that makes group deliberation fairer and groupthink-resistant. It does **not** debate. It **mediates**: a deterministic "constitution" (rules distilled from honeybee collective-decision biology) conducts the process, and a probabilistic mediator performs the language work the constitution invokes — synthesizing common ground, steelmanning the minority, detecting echo. Humans do the deliberating. The constitution owns every fairness guarantee (auditable); the mediator owns understanding and phrasing (never trusted to be fair on its own).
 
 ## Architecture in one breath
 
@@ -43,7 +43,7 @@ A Slack agent that makes group deliberation fairer and groupthink-resistant. It 
 
 > RISK: MCP-server-to-Slack-agent wiring is the least-documented seam. Spend an hour validating the connection in Phase 1; do not discover it in week 3.
 
-## Phase 2 — Probabilistic mediator: Vicky (Days 7–11)
+## Phase 2 — Probabilistic mediator (Days 7–11)
 
 11. **Generative synthesis** (`mediator/synthesize.py`): given the collected reads, produce N candidate common-ground statements (Habermas-style; start with N=8). 
 12. **Agreement prediction:** for each candidate, estimate each participant's agreement from their submitted read (Habermas reward-model role). Feed these into the deterministic bridging-ranker from Phase 1 — **the mediator proposes, the constitution selects.**

@@ -3,9 +3,13 @@
 Inverts the failure mode of participant-agents (drift toward the last speaker /
 premature consensus):
 
-  * recency is weighted DOWN, never up;
+  * recency neutrality is enforced STRUCTURALLY — the bridging ranker's visibility
+    weight is the bridging score (bridging.py) only; it never reads post-count or
+    recency, so the most recent input gets no extra influence by construction.
+    (An explicit recency down-weight function was retired as it had no place in
+    this design — there is no recency-weighted aggregation step to apply it to.)
   * dissent is preserved more strongly early, convergence allowed more late
-    (phase-tuned, drone boids-style).
+    (phase-tuned, drone boids-style) — see `weighted_support` below.
 
 All deterministic.
 """
@@ -25,16 +29,6 @@ def phase_index(round_idx: int, near_quorum: bool) -> int:
     if near_quorum:
         return 2
     return 1
-
-
-def recency_weights(n_contributions: int, w_recency: float) -> list[float]:
-    """Weights for a sequence of contributions, oldest first. The most recent
-    input is damped by `w_recency` so it does NOT get extra influence."""
-    if n_contributions == 0:
-        return []
-    weights = [1.0] * n_contributions
-    weights[-1] = w_recency
-    return weights
 
 
 def raw_support(scored: list[CandidateScore]) -> float:

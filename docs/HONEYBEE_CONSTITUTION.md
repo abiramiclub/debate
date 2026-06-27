@@ -1,8 +1,10 @@
-# HONEYBEE CONSTITUTION — Deliberation Mediator (Karpaty Wiki, distilled)
+# Deliberation Constitution — the deterministic rule set
 
 **Version:** 0.1 (v1 build target)
 **Owner:** Abirami Club
-**Role in system:** This is the DETERMINISTIC layer. It conducts the process and owns every fairness guarantee. The probabilistic mediator ("Vicky") only executes language tasks this constitution invokes; its outputs are always selected/bounded by the rules below.
+**Role in system:** This is the **constitution** — the DETERMINISTIC layer. It conducts the process and owns every fairness guarantee. The probabilistic **mediator** only executes language tasks this constitution invokes; its outputs are always selected/bounded by the rules below.
+
+> The rules are *derived from* collective-decision biology (honeybee swarms; see §9), but the system operates as **constitution + mediator** — that is the canonical language used throughout the code and docs.
 
 ---
 
@@ -51,7 +53,7 @@ representativeness(g, c) = P(g_complement, c) / P(g, c)    # diagnostic: who a s
 
 Directly inverts the failure mode of participant-agents (drift toward last speaker / forming consensus).
 
-- **Recency down-weight:** contributions are weighted by `w_recency` (default 0.5) — the most recent input does NOT get extra influence.
+- **Recency neutrality (structural):** the ranker's visibility weight is the bridging score (§2) only — it never reads post-count or recency — so the most recent input gets no extra influence *by construction*. (No separate recency down-weight step exists; an explicit `recency_weights()` helper was retired as it had no aggregation step to apply to. `w_recency` is retained in config only as a reserved tunable.)
 - **Minority visibility floor:** any credible view held by ≥1 participant is guaranteed surfacing at least once before quorum, regardless of support level.
 - **Phase-tuned convergence/dissent balance (drone boids-style):** the ratio of convergence-pressure to dissent-preservation adapts by phase.
 
@@ -121,7 +123,7 @@ All transitions are pure functions of logged state. No LLM call decides a transi
 
 ---
 
-## 9. Sources (the Karpaty wiki distills these)
+## 9. Sources (the rules are distilled from these)
 
 - **Honeybee swarm decision-making** — Seeley, *Honeybee Democracy* (quorum sensing, waggle dance, cross-inhibition, supersedure).
 - **Swarm coordination / weighting** — Reynolds' Boids (separation/alignment/cohesion); Raft consensus for fault-tolerant distributed agreement.

@@ -1,9 +1,9 @@
 {
   "project": {
     "name": "Honeybee Deliberation Mediator",
-    "working_names": {
-      "deterministic_layer": "Karpaty Wiki / Honeybee Constitution",
-      "probabilistic_layer": "Vicky (mediator)"
+    "canonical_names": {
+      "deterministic_layer": "constitution (rule set, derived from collective-decision biology)",
+      "probabilistic_layer": "mediator"
     },
     "owner": "Abirami Club",
     "one_line": "A Slack agent that makes group deliberation fairer and groupthink-resistant by mediating (not debating): a deterministic honeybee-derived constitution conducts the process while a probabilistic mediator performs only the language tasks it invokes.",
@@ -37,7 +37,7 @@
       "engine_mcp_server": "Hosts both sublayers; exposed to the Slack agent as an MCP server.",
       "deterministic_constitution": "See HONEYBEE_CONSTITUTION.md. Conducts the process; owns fairness guarantees.",
       "probabilistic_mediator_vicky": "LLM language tasks invoked by the constitution.",
-      "knowledge_and_data": "Karpaty wiki (sources -> distilled rules; runtime-citable; surfaced as Slack Canvas), anonymization map, pre/post position logs.",
+      "knowledge_and_data": "constitution rule set (sources -> distilled rules; runtime-citable; surfaced as Slack Canvas), anonymization map, pre/post position logs.",
       "external": "Real-Time Search API for vetted/sourced info injection."
     },
     "control_loop": "humans -> slack -> MCP -> [constitution conducts -> invokes mediator for language -> deterministic aggregation/selection -> quorum] -> slack -> debrief",
@@ -87,7 +87,7 @@
   "build_phases": [
     {"phase": 0, "days": "1-2", "goal": "Setup", "tasks": ["join Slack Developer Program (sandbox)", "slack create agent (Python)", "slack run hello-world", "repo with constitution/ + mediator/ split", "point mediator at existing OpenClaw backends"], "exit": "agent responds in sandbox; two-package split"},
     {"phase": 1, "days": "3-6", "goal": "Deterministic core + MCP", "tasks": ["distill 5 constitution rules", "protocol state machine", "bridging-based ranking", "anti-sycophancy weighting", "JSONL audit", "wrap as MCP server"], "exit": "scripted session runs end-to-end via MCP; MCP requirement satisfied"},
-    {"phase": 2, "days": "7-11", "goal": "Probabilistic mediator (Vicky)", "tasks": ["synthesize_candidates", "predict_agreement -> rank_bridging", "steelman_minority", "detect_echo"], "exit": "constitution-selected common-ground statement + minority steelman, selection traceable to deterministic ranker"},
+    {"phase": 2, "days": "7-11", "goal": "Probabilistic mediator", "tasks": ["synthesize_candidates", "predict_agreement -> rank_bridging", "steelman_minority", "detect_echo"], "exit": "constitution-selected common-ground statement + minority steelman, selection traceable to deterministic ranker"},
     {"phase": 3, "days": "12-15", "goal": "Slack depth", "tasks": ["anonymization + handles", "private-read DM/modal flow", "Block Kit rounds/quorum", "consent gate"], "exit": "small live session completes in sandbox"},
     {"phase": 4, "days": "16-18", "goal": "RTS injection + foil", "tasks": ["RTS vetted info injection (logged sources)", "information_uptake metric", "seeded echo-chamber foil"], "exit": "foil echo-chambers; mediated run does not; metrics quantify"},
     {"phase": 5, "days": "19-22", "goal": "Metrics/debrief/hardening", "tasks": ["debrief Block Kit view", "N-agnostic test (3/6/10)", "edge cases"], "exit": "clean runs at 3 sizes; no crashes"},
@@ -102,12 +102,12 @@
     "Tech = MCP (core) + Real-Time Search (injection).",
     "Reuse OpenClaw backends; new Slack app + MCP constitution.",
     "Bridging-based ranking is the fairness guarantee.",
-    "Karpaty wiki is a first-class component (runtime-citable + Slack Canvas), not scaffolding."
+    "The constitution rule set is a first-class component (runtime-citable + Slack Canvas), not scaffolding."
   ],
 
   "open_decisions": [
     {"id": "mediator_visibility", "question": "Visible mediator (posts synthesis into channel; stronger demo) vs ambient (private nudges, near-invisible; purer facilitator principle).", "must_resolve_before": "Phase 3"},
-    {"id": "wiki_prominence", "question": "How prominently to surface the Karpaty wiki (submitted artifact only vs live Slack Canvas vs runtime citations on every move)."},
+    {"id": "ruleset_prominence", "question": "How prominently to surface the constitution rule set (submitted artifact only vs live Slack Canvas vs runtime citations on every move)."},
     {"id": "llm_assignment", "question": "Which backend runs mediator vs foil (keep base models different for real diversity)."}
   ],
 

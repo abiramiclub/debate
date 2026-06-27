@@ -4,7 +4,12 @@
 # Dev / test only:
 pytest>=8.0
 
-# Added in later phases (kept here as a roadmap, not yet imported):
-#   slack-bolt        # Phase 0/3: the Slack agent
-#   anthropic         # Phase 2: real Claude-backed mediator
-#   mcp               # Phase 1: wrap the engine as an MCP server
+# Slack-phase seams (STEP 0):
+mcp>=1.0            # engine wrapped as an MCP server (mcp_server/)
+anthropic>=0.40    # real Claude/qwen mediator (mediator/claude.py)
+
+# Harness (Phase A) only:
+#   pandas, pyarrow  # to read the Habermas parquet
+
+# Next (the Slack surface):
+#   slack-bolt        # the Bolt Python agent (slack_app/)

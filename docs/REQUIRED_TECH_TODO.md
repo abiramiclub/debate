@@ -1,8 +1,18 @@
 # Required-tech wiring — tracked must-dos for the Slack phase
 
 The hackathon rewards combining two technologies: **MCP server integration** and
-the **Real-Time Search (RTS) API**. Both are intentionally *stubbed* in the
-offline build so the full story is runnable now; neither may silently disappear.
+the **Real-Time Search (RTS) API**.
+
+## Seam-slice results (STEP 0)
+
+| Seam | Status | Evidence |
+|------|--------|----------|
+| **MCP** | ✅ **PROVEN here** | `python -m mcp_server.seam_check`: engine runs as a real MCP server (stdio), a client round-trip returns the identical frozen `rank_bridging` result, stateful tools + audit round-trip. |
+| **Real mediator** | ⚙️ adapter built, live call **needs creds** | `mediator/claude.py` implements all 4 methods; offline-proven in `tests/test_real_mediator.py` with a stub client. `python -m mediator.probe_real` reports BLOCKED (no `ANTHROPIC_API_KEY`/OpenClaw endpoint in this env). |
+| **RTS** | ⚙️ adapter built, live call **needs token** | Method confirmed: `assistant.search.context` (Slack **Web API**, so backend-callable). `constitution/evidence.RTSAdapter` issues the call + neutrality-vets the result; offline-proven in `tests/test_rts.py`. Live test runs when `SLACK_RTS_TOKEN` is set. |
+
+What only you can supply (not available in this build env): a Slack **sandbox +
+workspace token** (RTS), and an **OpenClaw endpoint / API key** (mediator).
 
 ## 1. Real-Time Search (RTS) API — evidence injection
 

@@ -1,12 +1,13 @@
 {
   "project": {
-    "name": "Honeybee Deliberation Mediator",
+    "name": "Wiki & Vicky — a deliberation mediator",
     "canonical_names": {
-      "deterministic_layer": "constitution (rule set, derived from collective-decision biology)",
-      "probabilistic_layer": "mediator"
+      "deterministic_layer": "the Wiki (constitution / deterministic rule set)",
+      "probabilistic_layer": "Vicky (mediator)",
+      "note": "Code modules are constitution/ and mediator/; Wiki and Vicky are their nicknames in docs, audit, and channel. The pun (Wiki vs Vicky) labels deterministic vs not."
     },
     "owner": "Abirami Club",
-    "one_line": "A Slack agent that makes group deliberation fairer and groupthink-resistant by mediating (not debating): a deterministic honeybee-derived constitution conducts the process while a probabilistic mediator performs only the language tasks it invokes.",
+    "one_line": "A Slack agent that makes group deliberation fairer and groupthink-resistant by mediating (not debating): a deterministic constitution (the Wiki) conducts the process while a probabilistic mediator (Vicky) performs only the language tasks it invokes. Grounded in computational-deliberation research (Pol.is, Habermas Machine, Community Notes); it works against groupthink, not a swarm/hive-mind system.",
     "hackathon": {
       "name": "Slack Agent Builder Challenge",
       "track": "Slack Agent for Good",
@@ -35,7 +36,7 @@
       "humans": "Anonymized participants; submit private reads + confidence, discuss, receive debrief.",
       "slack_surface": "Channels/threads, DMs + modals (Block Kit), consent gate, neutral handles.",
       "engine_mcp_server": "Hosts both sublayers; exposed to the Slack agent as an MCP server.",
-      "deterministic_constitution": "See HONEYBEE_CONSTITUTION.md. Conducts the process; owns fairness guarantees.",
+      "deterministic_constitution": "See WIKI.md. Conducts the process; owns fairness guarantees.",
       "probabilistic_mediator_vicky": "LLM language tasks invoked by the constitution.",
       "knowledge_and_data": "constitution rule set (sources -> distilled rules; runtime-citable; surfaced as Slack Canvas), anonymization map, pre/post position logs.",
       "external": "Real-Time Search API for vetted/sourced info injection."
@@ -120,7 +121,7 @@
   ],
 
   "companion_files": [
-    {"file": "HONEYBEE_CONSTITUTION.md", "purpose": "the deterministic rules (drop into repo; reference from agent)"},
+    {"file": "WIKI.md", "purpose": "the deterministic rules / constitution (drop into repo; reference from agent)"},
     {"file": "architecture_v1.mermaid", "purpose": "architecture diagram (deterministic gold / probabilistic blue)"},
     {"file": "BUILD_PLAN_v1.md", "purpose": "phased build plan with exit checks and risks"}
   ]

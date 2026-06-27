@@ -19,7 +19,7 @@ from mediator.fake import FakeMediator
 
 
 def main() -> None:
-    audit_path = os.path.join(tempfile.gettempdir(), "honeybee_demo_audit.jsonl")
+    audit_path = os.path.join(tempfile.gettempdir(), "wiki_demo_audit.jsonl")
     if os.path.exists(audit_path):
         os.remove(audit_path)
 

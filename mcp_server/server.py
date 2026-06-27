@@ -1,4 +1,4 @@
-"""The Honeybee constitution engine, exposed as an MCP server.
+"""The Wiki — the constitution engine — exposed as an MCP server.
 
 Architecture (locked decision #3): the Slack agent is the MCP host/client; THIS is
 the MCP server. The agent calls these tools; the probabilistic mediator runs
@@ -28,7 +28,7 @@ from constitution.weighting import phase_index, raw_support, weighted_support
 from mediator.fake import FakeMediator
 from mediator.scripted import ScriptedMediator
 
-mcp = FastMCP("honeybee-constitution")
+mcp = FastMCP("wiki-constitution")
 
 # Server-side session store — the whole point: MCP calls are stateless, so we
 # persist the live engine state keyed by session_id across tool invocations.
@@ -36,7 +36,7 @@ _SESSIONS: dict[str, Session] = {}
 
 
 def _audit_path(session_id: str) -> str:
-    return os.path.join(tempfile.gettempdir(), f"honeybee_mcp_{session_id}.jsonl")
+    return os.path.join(tempfile.gettempdir(), f"wiki_mcp_{session_id}.jsonl")
 
 
 def _require(session_id: str) -> Session:

@@ -74,7 +74,7 @@ def build_blocks(fixture: dict, session, debrief: dict) -> dict:
 
     blocks = [
         {"type": "header", "text": {"type": "plain_text",
-         "text": "🐝 Deliberation debrief"}},
+         "text": "⚖️ Deliberation debrief"}},
         {"type": "section", "text": _md(f"*Topic:* {fixture['topic']}")},
         {"type": "section", "text": _md(
             f"*Outcome (bridged consensus):*\n>{winner}\n\n"
@@ -111,7 +111,7 @@ def build_blocks(fixture: dict, session, debrief: dict) -> dict:
 def main():
     fx = load_fixture()
     import tempfile
-    audit_path = os.path.join(tempfile.gettempdir(), "honeybee_debrief_audit.jsonl")
+    audit_path = os.path.join(tempfile.gettempdir(), "wiki_debrief_audit.jsonl")
     if os.path.exists(audit_path):
         os.remove(audit_path)
     session, results, debrief = run_constitution(fx, audit_path)

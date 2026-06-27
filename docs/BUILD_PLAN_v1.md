@@ -1,4 +1,4 @@
-# Build Plan v1 — Bee-Constitution Deliberation Mediator (Slack Agent)
+# Build Plan v1 — Wiki & Vicky, a Deliberation Mediator (Slack Agent)
 
 **Hackathon:** Slack Agent Builder Challenge · Track: Agent for Good
 **Deadline:** July 13, 2026, 5:00pm PDT · **Today:** June 19, 2026 (~24 days)
@@ -8,7 +8,7 @@
 
 ## The one-paragraph spec
 
-A Slack agent that makes group deliberation fairer and groupthink-resistant. It does **not** debate. It **mediates**: a deterministic "constitution" (rules distilled from honeybee collective-decision biology) conducts the process, and a probabilistic mediator performs the language work the constitution invokes — synthesizing common ground, steelmanning the minority, detecting echo. Humans do the deliberating. The constitution owns every fairness guarantee (auditable); the mediator owns understanding and phrasing (never trusted to be fair on its own).
+A Slack agent that makes group deliberation fairer and groupthink-resistant. It does **not** debate. It **mediates**: a deterministic constitution (the Wiki) — rules distilled from computational-deliberation research (Pol.is, Habermas Machine, Community Notes) — conducts the process, and a probabilistic mediator (Vicky) performs the language work the Wiki invokes — synthesizing common ground, steelmanning the minority, detecting echo. Humans do the deliberating. The constitution owns every fairness guarantee (auditable); the mediator owns understanding and phrasing (never trusted to be fair on its own).
 
 ## Architecture in one breath
 
@@ -27,15 +27,15 @@ A Slack agent that makes group deliberation fairer and groupthink-resistant. It 
 
 ## Phase 1 — Deterministic core: the Constitution + MCP server (Days 3–6)
 
-5. **Distill the constitution.** Write `constitution/rules.md` as a 3-column table: *biological fact → abstracted principle → system rule*. Cover exactly five mechanisms (no more for v1):
+5. **Distill the constitution.** Write the rule set (the Wiki) as a table: *principle → system rule*. Cover exactly five mechanisms (no more for v1):
    - Independent assessment before advertising → collect each member's private read **before** any reveal (anti-anchoring).
-   - Waggle-dance proportional to quality → support surfaced in proportion to merit.
+   - Merit-proportional visibility → support surfaced in proportion to merit, not volume/recency.
    - Cross-inhibition (stop-signals) → fire a counter-signal when consensus forms too fast (anti-premature-lock-in).
    - Quorum threshold → decide at a threshold, not forced unanimity.
-   - Queen-pheromone decline → trigger a structural refresh when the discussion signal goes flat (stale-consensus detection).
+   - Stale-signal detection → trigger a structural refresh when the discussion signal goes flat (stale-consensus detection).
 6. **Implement the state machine** (`constitution/protocol.py`): states = `COLLECT_READS → REVEAL → CROSS_INHIBITION → QUORUM_CHECK → (loop|DEBRIEF)`. Pure, deterministic transitions. No LLM calls here.
 7. **Implement the aggregation rule:** **bridging-based ranking / group-informed consensus** (score statements by cross-group agreement, not within-group) — the deployed anti-majority-tyranny math from Pol.is / Remesh / Community Notes. This is the fairness guarantee.
-8. **Anti-sycophancy weighting:** weight recency **down**, under-represented views **up**, in any ranking. Make the weights config so they're tunable (drone-style, phase-aware: more dissent-preservation early).
+8. **Anti-sycophancy weighting:** weight recency **down**, under-represented views **up**, in any ranking. Make the weights config so they're tunable (phase-aware: more dissent-preservation early).
 9. **Audit log:** every state transition and every agent contribution appended to a JSONL file with timestamp + source. This is both governance and demo evidence.
 10. **Wrap the engine as an MCP server** exposing deterministic tools: `start_session`, `store_read`, `check_quorum`, `rank_bridging`, `get_audit`. Wire the Slack agent to call them.
 
@@ -72,7 +72,7 @@ A Slack agent that makes group deliberation fairer and groupthink-resistant. It 
 ## Phase 5 — Metrics, debrief, hardening (Days 19–22)
 
 22. **Debrief view (Block Kit):** information-uptake score, echo index, which participants were agents, the audit trail. This is the "for good" payload and the UX score.
-23. **N-agnostic test:** run with 3, 6, and 10 participants; confirm quorum logic scales (bee/drone property — decision is a threshold, not a headcount).
+23. **N-agnostic test:** run with 3, 6, and 10 participants; confirm quorum logic scales (threshold property — a decision is a threshold, not a headcount).
 24. **Edge cases:** no quorum reached; single dominant speaker; everyone agrees immediately (is it real or performative?); a participant drops mid-session.
 
 **Exit check:** clean runs at three group sizes; debrief renders correctly; no crashes on the edge cases above.
@@ -81,15 +81,15 @@ A Slack agent that makes group deliberation fairer and groupthink-resistant. It 
 
 25. Record the **controlled** 3-minute demo (foil → mediated → debrief). Do **not** gamble on a live unknown-N session on camera.
 26. Finalize the **architecture diagram** (`architecture_v1.mermaid`) for the required diagram artifact.
-27. Writeup using the prepared framing: "Slack is where teams decide; this makes them decide *well*," the prob/det split, the bee/drone/deliberation-tool convergence, and the Habermas/Science credibility shield. Frame fairness strictly as *process*, never outcome; elections as motivating example, not headline.
+27. Writeup using the prepared framing: "Slack is where teams decide; this makes them decide *well*," the prob/det split (Wiki vs. Vicky), the deliberation-science lineage (Pol.is / Habermas / Community Notes), and the Habermas/Science credibility shield. Frame fairness strictly as *process*, never outcome; elections as motivating example, not headline.
 28. Submit: text description, demo video, architecture diagram, sandbox URL.
 
 ---
 
 ## Scope discipline (read before adding anything)
 
-- **In for v1:** 5 bee mechanisms, bridging-based ranking, anti-sycophancy weighting, anonymization, RTS injection, the foil, debrief metrics, audit log.
-- **Out of v1 (named, parked):** queen-supersedure "facilitator refresh," swarming "group fork," full honeybee wiki (curate only the 5 rows you need; the full wiki is a post-hackathon asset), QLoRA/fine-tuning anything, Marketplace submission (that's the Organizations track; you're Agent for Good).
+- **In for v1:** 5 governing mechanisms, bridging-based ranking, anti-sycophancy weighting, anonymization, RTS injection, the foil, debrief metrics, audit log.
+- **Out of v1 (named, parked):** a "facilitator refresh," a "group fork," the full rule-set wiki (curate only the 5 rows you need; the full wiki is a post-hackathon asset), QLoRA/fine-tuning anything, Marketplace submission (that's the Organizations track; you're Agent for Good).
 - **Decision still open:** mediator **visible** (posts synthesis into channel) vs **ambient** (works through private nudges, near-invisible). Visible = stronger demo; ambient = purer facilitator principle. Resolve before Phase 3.
 
 ## Top risks (flagged early, per working style)

@@ -1,5 +1,5 @@
-%% Architecture v1 — Bee-Constitution Deliberation Mediator (Slack Agent)
-%% Core thesis: deterministic constitution CONDUCTS; probabilistic mediator EXECUTES language tasks it invokes.
+%% Architecture v1 — Wiki & Vicky, a Deliberation Mediator (Slack Agent)
+%% Core thesis: the deterministic constitution (Wiki) CONDUCTS; the probabilistic mediator (Vicky) EXECUTES language tasks it invokes.
 flowchart TB
     subgraph HUMANS["👥 Human participants — anonymized"]
         H1["Submit private read + confidence<br/>(before any reveal)"]
@@ -15,14 +15,14 @@ flowchart TB
 
     subgraph ENGINE["⚙️ MCP server — the engine"]
         direction TB
-        subgraph DET["🔒 DETERMINISTIC — Constitution (rule set)"]
+        subgraph DET["🔒 DETERMINISTIC — the Wiki (constitution / rule set)"]
             D1["Protocol state machine<br/>COLLECT → REVEAL → CROSS-INHIBITION → QUORUM"]
             D2["Bridging-based ranking<br/>cross-group consensus = fairness guarantee"]
             D3["Anti-sycophancy weighting<br/>recency-neutral (structural) · minority up · phase-tuned"]
             D4["Quorum threshold (N-agnostic)"]
             D5["JSONL audit log"]
         end
-        subgraph PROB["🎲 PROBABILISTIC — Mediator"]
+        subgraph PROB["🎲 PROBABILISTIC — Vicky (mediator)"]
             P1["Synthesize common-ground candidates"]
             P2["Predict per-person agreement"]
             P3["Steelman the minority"]
@@ -30,7 +30,7 @@ flowchart TB
         end
     end
 
-    KNOW["📚 Honeybee studies wiki<br/>→ distilled rules (5 for v1)"]
+    KNOW["📚 Deliberation-science sources<br/>(Pol.is · Habermas · Community Notes)<br/>→ the Wiki's distilled rules (5 for v1)"]
     DATA["🗄️ Anonymization map<br/>+ pre/post position logs"]
     RTS["🌐 Real-Time Search API<br/>vetted, sourced info injection"]
 

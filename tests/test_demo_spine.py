@@ -50,6 +50,10 @@ def test_pipelines_diverge_on_identical_input():
     assert run_naive(fx) != debrief["winner"]
 
 
-def test_no_vicky_in_user_facing_audit():
+def test_audit_uses_wiki_and_vicky_handles():
+    # The det/non-det pun: the deterministic constitution logs as "Wiki", the
+    # probabilistic mediator logs as "Vicky".
     _, _, _, debrief = _run()
-    assert not any("Vicky" in str(e.get("actor_handle", "")) for e in debrief["audit"])
+    handles = {e.get("actor_handle") for e in debrief["audit"]}
+    assert "Wiki" in handles   # deterministic constitution
+    assert "Vicky" in handles  # probabilistic mediator

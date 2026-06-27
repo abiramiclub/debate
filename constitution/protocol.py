@@ -117,7 +117,7 @@ class Session:
             p = Participant(user_id=user_id, handle=handle, actor_type=actor_type)
             self.participants.append(p)
             self._by_handle[handle] = p
-        self.audit.log(self.state, "system", "system", "consent_recorded",
+        self.audit.log(self.state, "Wiki", "system", "consent_recorded",
                        payload={"n": len(participants)})
         self.state = State.COLLECT_READS
 
@@ -146,7 +146,7 @@ class Session:
             kept = [c for c in regen if not advocates_position(c)]
             rejected += [c for c in regen if advocates_position(c)]
         for c in rejected:
-            self.audit.log(State.REVEAL, "mediator", "agent", "neutrality_rejected",
+            self.audit.log(State.REVEAL, "Vicky", "agent", "neutrality_rejected",
                            payload={"kind": "candidate", "text": c})
         return kept or candidates  # last resort: proceed (already logged) over crashing
 
@@ -157,7 +157,7 @@ class Session:
             text = self.mediator.steelman_minority(self.reads, labels)
             if not advocates_position(text):
                 return text
-            self.audit.log(State.CROSS_INHIBITION, "mediator", "agent",
+            self.audit.log(State.CROSS_INHIBITION, "Vicky", "agent",
                            "neutrality_rejected", payload={"kind": "steelman", "text": text})
         return None
 
@@ -182,7 +182,7 @@ class Session:
             candidates = self._gate_candidates(
                 self.mediator.synthesize_candidates(self.reads, self.cfg.N_candidates))
             agreement = self.mediator.predict_agreement(self.reads, candidates)
-            self.audit.log(State.REVEAL, "mediator", "agent", "synthesize+predict",
+            self.audit.log(State.REVEAL, "Vicky", "agent", "synthesize+predict",
                            payload={"n_candidates": len(candidates)})
 
             # 3-4. Constitution selects (deterministic).
@@ -195,7 +195,7 @@ class Session:
             near = raw_support(scored) >= self.cfg.Q
             phase = phase_index(round_idx, near)
             support = weighted_support(scored, phase, self.cfg)
-            self.audit.log(State.REVEAL, "system", "system", "rank_bridging",
+            self.audit.log(State.REVEAL, "Wiki", "system", "rank_bridging",
                            payload={"winner": winner_text, "support": support,
                                     "groups": labels})
 
@@ -210,7 +210,7 @@ class Session:
             if minority:
                 steelman = self._gate_steelman(labels)
                 if steelman is not None:
-                    self.audit.log(State.CROSS_INHIBITION, "mediator", "agent",
+                    self.audit.log(State.CROSS_INHIBITION, "Vicky", "agent",
                                    "steelman_minority", payload={"text": steelman})
 
             # (b) Cross-inhibition trigger: counter-pressure against a fast /
@@ -218,7 +218,7 @@ class Session:
             ci_fired = False
             if round_idx == 0 and support >= self.cfg.V_ci:
                 ci_fired = True
-                self.audit.log(State.CROSS_INHIBITION, "system", "system",
+                self.audit.log(State.CROSS_INHIBITION, "Wiki", "system",
                                "cross_inhibition", payload={"support": support,
                                                             "v_ci": self.cfg.V_ci})
             self._ci_rounds_elapsed += 1
@@ -251,7 +251,7 @@ class Session:
                 decision = "STALE_REFRESH"
             else:
                 decision = "CONTINUE"
-            self.audit.log(State.QUORUM_CHECK, "system", "system", "check_quorum",
+            self.audit.log(State.QUORUM_CHECK, "Wiki", "system", "check_quorum",
                            payload={"decision": decision, "support": support,
                                     "stale_streak": self._stale_streak})
 
@@ -289,7 +289,7 @@ class Session:
     # --- DEBRIEF -------------------------------------------------------------
     def debrief(self) -> dict:
         """Reveal the anonymization map, the outcome, and the audit trail."""
-        self.audit.log(State.DEBRIEF, "system", "system", "debrief")
+        self.audit.log(State.DEBRIEF, "Wiki", "system", "debrief")
         self.state = State.DONE
         return {
             "session_id": self.session_id,

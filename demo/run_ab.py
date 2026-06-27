@@ -54,7 +54,7 @@ def run_constitution(fx: dict, audit_path: str):
 
 def main():
     fx = load_fixture()
-    audit_path = os.path.join(tempfile.gettempdir(), "honeybee_ab_audit.jsonl")
+    audit_path = os.path.join(tempfile.gettempdir(), "wiki_ab_audit.jsonl")
     if os.path.exists(audit_path):
         os.remove(audit_path)
 

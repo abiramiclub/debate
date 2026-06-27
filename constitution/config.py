@@ -1,7 +1,7 @@
-"""Default parameters for the Honeybee Constitution.
+"""Default parameters for the Wiki (the deliberation constitution).
 
 Every fairness-relevant number lives here so it is tunable and auditable in one
-place. These mirror the defaults table in docs/HONEYBEE_CONSTITUTION.md (section 8).
+place. These mirror the defaults table in docs/WIKI.md (section 8).
 """
 
 from dataclasses import dataclass

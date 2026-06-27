@@ -1,0 +1,99 @@
+{
+  "topic": "Should our team move to a four-day work week?",
+  "briefing": "Shared briefing at session start (the thin wiki): the team is deciding whether to adopt a four-day work week. Two concerns dominate — staff wellbeing/output vs. client coverage. Participate independently before seeing others' views.",
+  "participants": [
+    {"user_id": "alex",    "camp": "pro", "actor_type": "human"},
+    {"user_id": "bturing", "camp": "pro", "actor_type": "agent"},
+    {"user_id": "chen",    "camp": "pro", "actor_type": "human"},
+    {"user_id": "dimitri", "camp": "con", "actor_type": "human"},
+    {"user_id": "esme",    "camp": "con", "actor_type": "human"}
+  ],
+  "reads": [
+    {"camp": "pro", "text": "A four-day week boosts wellbeing and focus, and output stays high.", "confidence": 5},
+    {"camp": "pro", "text": "Fewer days improves wellbeing; productivity and focus hold up.", "confidence": 4},
+    {"camp": "pro", "text": "Wellbeing and focus rise with a four-day week; output is maintained.", "confidence": 4},
+    {"camp": "con", "text": "We need five-day coverage for client response or service suffers.", "confidence": 5},
+    {"camp": "con", "text": "Client coverage and response times require a five-day week.", "confidence": 4}
+  ],
+  "steelman_text": "The strongest case for the minority: client coverage is a real obligation — if response times slip, the people who depend on the team pay for it. Any move must protect coverage, not wish it away.",
+  "evidence": {
+    "text": "Field trials of the four-day week (e.g. the 2022 UK pilot across 61 organisations) report output was maintained when client-facing teams used an explicit coverage rota.",
+    "source": "https://www.4dayweek.com/uk-pilot-results",
+    "handle": "Linden",
+    "label": "fixture"
+  },
+  "rounds": [
+    {
+      "note": "round 0 — shallow premature consensus on a platitude, plus the two camp positions",
+      "candidates": [
+        "Whatever we choose, we all want the team to thrive.",
+        "Adopt a four-day week to improve wellbeing and focus.",
+        "Keep a five-day week to protect client coverage."
+      ],
+      "agreement": [
+        [0.90, 0.90, 0.15],
+        [0.90, 0.88, 0.15],
+        [0.90, 0.90, 0.15],
+        [0.90, 0.15, 0.90],
+        [0.90, 0.15, 0.88]
+      ]
+    },
+    {
+      "note": "round 1 — group drops the platitude; real positions polarise",
+      "candidates": [
+        "Adopt a four-day week; productivity will hold.",
+        "Keep five days; client response cannot slip."
+      ],
+      "agreement": [
+        [0.90, 0.15],
+        [0.88, 0.15],
+        [0.90, 0.15],
+        [0.15, 0.90],
+        [0.15, 0.88]
+      ]
+    },
+    {
+      "note": "round 2 — same positions repeat; no new information (echo begins)",
+      "candidates": [
+        "Adopt a four-day week; productivity will hold.",
+        "Keep five days; client response cannot slip."
+      ],
+      "agreement": [
+        [0.90, 0.15],
+        [0.88, 0.15],
+        [0.90, 0.15],
+        [0.15, 0.90],
+        [0.15, 0.88]
+      ]
+    },
+    {
+      "note": "round 3 — still repeating -> deadlock -> triggers evidence injection",
+      "candidates": [
+        "Adopt a four-day week; productivity will hold.",
+        "Keep five days; client response cannot slip."
+      ],
+      "agreement": [
+        [0.90, 0.15],
+        [0.88, 0.15],
+        [0.90, 0.15],
+        [0.15, 0.90],
+        [0.15, 0.88]
+      ]
+    },
+    {
+      "note": "round 4 — post-injection compromise both camps can endorse -> bridging quorum",
+      "candidates": [
+        "Pilot a four-day week with a Friday on-call rota to keep client coverage.",
+        "Adopt a four-day week.",
+        "Keep a five-day week."
+      ],
+      "agreement": [
+        [0.85, 0.90, 0.15],
+        [0.86, 0.88, 0.15],
+        [0.85, 0.90, 0.15],
+        [0.82, 0.15, 0.88],
+        [0.80, 0.15, 0.86]
+      ]
+    }
+  ]
+}

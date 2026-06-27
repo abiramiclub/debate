@@ -1,4 +1,4 @@
-"""The probabilistic layer ("Vicky") — defined as an interface.
+"""The probabilistic layer — the mediator, defined as an interface.
 
 WHAT THE MEDIATOR IS: the *only* place language/LLM work happens. It reads and
 summarizes opinions, proposes common-ground statements, estimates who would

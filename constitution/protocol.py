@@ -21,6 +21,7 @@ from mediator.base import Mediator, Read
 from .audit import AuditLog
 from .bridging import cluster_participants, rank_candidates
 from .config import DEFAULT, Config
+from .evidence import Evidence, EvidenceSource
 from .weighting import phase_index, raw_support, weighted_support
 
 NEUTRAL_HANDLES = [
@@ -34,6 +35,7 @@ class State(str, Enum):
     COLLECT_READS = "COLLECT_READS"
     REVEAL = "REVEAL"
     CROSS_INHIBITION = "CROSS_INHIBITION"
+    INFO_INJECTION = "INFO_INJECTION"
     QUORUM_CHECK = "QUORUM_CHECK"
     DEBRIEF = "DEBRIEF"
     DONE = "DONE"
@@ -47,10 +49,25 @@ class RoundResult:
     winner_support: float
     group_labels: list[int]
     cross_inhibition_fired: bool
+    minority_present: bool
     steelman: Optional[str]
     echo_flag: bool
     echo_reason: str
-    decision: str  # "QUORUM_MET" | "CONTINUE" | "STALE_REFRESH"
+    decision: str  # "QUORUM_MET" | "CONTINUE" | "STALE_REFRESH" | "EVIDENCE_INJECTED"
+    evidence: Optional[Evidence] = None
+
+
+def _minority_present(labels: list[int]) -> bool:
+    """True when clustering yields more than one opinion group AND at least one
+    group is strictly smaller than the largest (a genuine minority cluster).
+    Below the clustering floor (each participant their own group) all groups are
+    equal-sized singletons, so this is False — no real minority structure."""
+    if len(set(labels)) <= 1:
+        return False
+    sizes: dict[int, int] = {}
+    for lab in labels:
+        sizes[lab] = sizes.get(lab, 0) + 1
+    return min(sizes.values()) < max(sizes.values())
 
 
 @dataclass
@@ -69,10 +86,12 @@ class Session:
         mediator: Mediator,
         audit_path: str,
         cfg: Config = DEFAULT,
+        evidence_source: Optional[EvidenceSource] = None,
     ):
         self.session_id = session_id
         self.mediator = mediator
         self.cfg = cfg
+        self.evidence_source = evidence_source
         self.audit = AuditLog(audit_path, session_id)
         self.state = State.CONSENT
         self.participants: list[Participant] = []
@@ -81,6 +100,8 @@ class Session:
         self._prev_round_msgs: list[str] = []
         self._ci_rounds_elapsed = 0
         self._stale_streak = 0
+        self._injected = False
+        self.injected_evidence: list[Evidence] = []
         self.winner_text: Optional[str] = None
 
     # --- CONSENT -------------------------------------------------------------
@@ -107,7 +128,7 @@ class Session:
                        "store_read", payload={"confidence": confidence, "text": text})
 
     # --- REVEAL + rounds -----------------------------------------------------
-    def deliberate(self, max_rounds: int = 5,
+    def deliberate(self, max_rounds: int = 6,
                    discussion_by_round: Optional[list[list[str]]] = None) -> list[RoundResult]:
         """Run reveal + cross-inhibition + quorum rounds until a decision."""
         if self.state != State.COLLECT_READS:
@@ -125,7 +146,7 @@ class Session:
             # 1-2. Mediator proposes (the ONLY language work).
             candidates = self.mediator.synthesize_candidates(self.reads, self.cfg.N_candidates)
             agreement = self.mediator.predict_agreement(self.reads, candidates)
-            self.audit.log(State.REVEAL, "Vicky", "agent", "synthesize+predict",
+            self.audit.log(State.REVEAL, "mediator", "agent", "synthesize+predict",
                            payload={"n_candidates": len(candidates)})
 
             # 3-4. Constitution selects (deterministic).
@@ -142,19 +163,34 @@ class Session:
                            payload={"winner": winner_text, "support": support,
                                     "groups": labels})
 
-            # CROSS_INHIBITION: counter-pressure against fast consensus.
+            # CROSS_INHIBITION stage. Two distinct rules live here:
             self.state = State.CROSS_INHIBITION
-            ci_fired = False
+
+            # (a) Minority steelman: fires WHENEVER a minority cluster exists
+            #     (constitution §3 minority-visibility floor) — not only as the
+            #     cross-inhibition payload.
+            minority = _minority_present(labels)
             steelman = None
-            if round_idx == 0 and support >= self.cfg.V_ci and self._ci_rounds_elapsed == 0:
+            if minority:
                 steelman = self.mediator.steelman_minority(self.reads, labels)
-                ci_fired = True
-                self.audit.log(State.CROSS_INHIBITION, "Vicky", "agent",
+                self.audit.log(State.CROSS_INHIBITION, "mediator", "agent",
                                "steelman_minority", payload={"text": steelman})
+
+            # (b) Cross-inhibition trigger: counter-pressure against a fast /
+            #     premature consensus in the first reveal round (§1 rule 3).
+            ci_fired = False
+            if round_idx == 0 and support >= self.cfg.V_ci:
+                ci_fired = True
+                self.audit.log(State.CROSS_INHIBITION, "system", "system",
+                               "cross_inhibition", payload={"support": support,
+                                                            "v_ci": self.cfg.V_ci})
             self._ci_rounds_elapsed += 1
 
-            # Echo detection on what was surfaced this round (+ any discussion).
-            current_msgs = candidates + ([steelman] if steelman else []) + discussion
+            # Echo detection measures whether the DELIBERATION content (the
+            # positions on the table + any human discussion) brings new
+            # information. It deliberately excludes the mediator's own steelman
+            # scaffolding, which repeats and would otherwise mask genuine novelty.
+            current_msgs = candidates + discussion
             echo_flag, echo_reason = self.mediator.detect_echo(self._prev_round_msgs, current_msgs)
             self._prev_round_msgs = current_msgs
             if echo_flag:
@@ -165,10 +201,16 @@ class Session:
             # QUORUM_CHECK (deterministic).
             self.state = State.QUORUM_CHECK
             quorum_met = support >= self.cfg.Q and self._ci_rounds_elapsed >= 1 and not ci_fired
-            stale = self._stale_streak >= self.cfg.R
+            deadlock = self._stale_streak >= self.cfg.R
+
+            evidence: Optional[Evidence] = None
             if quorum_met:
                 decision = "QUORUM_MET"
-            elif stale:
+            elif deadlock and self.evidence_source is not None and not self._injected:
+                # Deadlock/echo CONSEQUENCE: inject one sourced fact (§5).
+                evidence = self._inject_evidence(round_idx)
+                decision = "EVIDENCE_INJECTED" if evidence else "STALE_REFRESH"
+            elif deadlock:
                 decision = "STALE_REFRESH"
             else:
                 decision = "CONTINUE"
@@ -179,8 +221,8 @@ class Session:
             results.append(RoundResult(
                 round_idx=round_idx, candidates=candidates, winner_text=winner_text,
                 winner_support=support, group_labels=labels, cross_inhibition_fired=ci_fired,
-                steelman=steelman, echo_flag=echo_flag, echo_reason=echo_reason,
-                decision=decision,
+                minority_present=minority, steelman=steelman, echo_flag=echo_flag,
+                echo_reason=echo_reason, decision=decision, evidence=evidence,
             ))
 
             if decision in ("QUORUM_MET", "STALE_REFRESH"):
@@ -189,6 +231,23 @@ class Session:
 
         self.state = State.DEBRIEF
         return results
+
+    def _inject_evidence(self, round_idx: int) -> Optional[Evidence]:
+        """INFO_INJECTION: pull one vetted, sourced fact and inject it under a
+        neutral handle. The source is written to the audit. Resets the echo
+        streak because new information has entered the room."""
+        self.state = State.INFO_INJECTION
+        ev = self.evidence_source.fetch({"reads": self.reads, "round": round_idx})
+        if ev is None:
+            return None
+        self._injected = True
+        self.injected_evidence.append(ev)
+        self._stale_streak = 0
+        # Injected fact lands like any other contribution (anonymous handle).
+        self.reads.append(Read(handle=ev.handle, text=ev.text, confidence=3))
+        self.audit.log(State.INFO_INJECTION, ev.handle, "agent", "inject_evidence",
+                       payload={"text": ev.text}, source=ev.source)
+        return ev
 
     # --- DEBRIEF -------------------------------------------------------------
     def debrief(self) -> dict:
@@ -202,6 +261,10 @@ class Session:
             "participants": [
                 {"handle": p.handle, "user_id": p.user_id, "actor_type": p.actor_type}
                 for p in self.participants
+            ],
+            "injected_evidence": [
+                {"text": e.text, "source": e.source, "handle": e.handle}
+                for e in self.injected_evidence
             ],
             "audit": self.audit.read_all(),
         }

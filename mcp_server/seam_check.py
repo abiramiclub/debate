@@ -48,7 +48,7 @@ async def main() -> int:
             tools = await session.list_tools()
             names = sorted(t.name for t in tools.tools)
             print("1) tool discovery:", names)
-            assert {"start_session", "store_read", "rank_bridging", "check_quorum",
+            assert {"start_session", "submit_read", "rank_bridging", "check_quorum",
                     "inject_evidence", "get_audit"}.issubset(set(names))
 
             r = await session.call_tool("rank_bridging", {"agreement": AGREEMENT})
@@ -62,13 +62,14 @@ async def main() -> int:
             await session.call_tool("start_session", {"session_id": "seam",
                 "participants": [{"user_id": "a", "actor_type": "human"},
                                  {"user_id": "b", "actor_type": "agent"}]})
-            await session.call_tool("store_read", {"session_id": "seam", "handle": "Birch",
+            await session.call_tool("submit_read", {"session_id": "seam", "handle": "Birch",
                 "text": "coverage matters", "confidence": 4})
             await session.call_tool("inject_evidence", {"session_id": "seam", "handle": "Linden",
                 "text": "pilot kept output up with a rota", "source": "https://example.org/pilot"})
             audit = _payload(await session.call_tool("get_audit", {"session_id": "seam"}))
             actions = [e["action"] for e in (audit if isinstance(audit, list) else audit["result"])]
             print("4) stateful audit round-trip actions:", actions)
+            # tool is submit_read; the frozen engine's audit action is store_read
             assert "inject_evidence" in actions and "store_read" in actions
 
     print("\nMCP SEAM: PASS — engine is reachable as an MCP server and returns the real frozen result.")

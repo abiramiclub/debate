@@ -12,10 +12,15 @@ than the baselines, and at what cost to raw average satisfaction?
                          session, in (0, 1]; 1.0 means "the broadest available"
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from constitution.bridging import cluster_participants, rank_candidates
 from constitution.config import DEFAULT
 
-from .loader import Session
+if TYPE_CHECKING:  # type-only; avoids importing pandas via the loader at runtime
+    from .loader import Session
 
 
 def _agglom_two_camps(endorsement: list[list[float]]) -> list[int]:

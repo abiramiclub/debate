@@ -22,6 +22,17 @@
     "handle": "Linden",
     "label": "fixture"
   },
+  "positions": {
+    "_note": "SCENARIO ONLY (decision #9): simulated pre/post stance toward a coverage-aware four-day week, 0..1, with 1..5 confidence. The Habermas data has no evidence dimension, so these are stipulated by the fixture, not data-derived. Uptake is computed from them; it is never presented as data-validated.",
+    "measured_at": {"pre": "deadlock (before injection)", "post": "after injection"},
+    "by_participant": [
+      {"camp": "pro", "pre": {"stance": 0.80, "confidence": 4}, "post": {"stance": 0.82, "confidence": 4}},
+      {"camp": "pro", "pre": {"stance": 0.78, "confidence": 4}, "post": {"stance": 0.80, "confidence": 4}},
+      {"camp": "pro", "pre": {"stance": 0.80, "confidence": 4}, "post": {"stance": 0.82, "confidence": 4}},
+      {"camp": "con", "pre": {"stance": 0.25, "confidence": 5}, "post": {"stance": 0.66, "confidence": 4}},
+      {"camp": "con", "pre": {"stance": 0.30, "confidence": 4}, "post": {"stance": 0.68, "confidence": 4}}
+    ]
+  },
   "rounds": [
     {
       "note": "round 0 — shallow premature consensus on a platitude, plus the two camp positions",

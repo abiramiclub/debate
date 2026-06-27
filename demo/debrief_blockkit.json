@@ -1,0 +1,93 @@
+{
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "\ud83d\udc1d Deliberation debrief"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Topic:* Should our team move to a four-day work week?"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Outcome (bridged consensus):*\n>Pilot a four-day week with a Friday on-call rota to keep client coverage.\n\n*What majority-rule would have picked:*\n>Adopt a four-day week; productivity will hold."
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Least-satisfied group*\nbridged *0.81* \u00b7 naive *0.15*"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Minority survival*\nbridged *0.81* \u00b7 naive *0.15*"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Average endorsement*\nbridged *0.84* \u00b7 naive *0.60*"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Bridging breadth*\n1.00 (1.00 = broadest available)"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Information uptake (this scenario):* the minority shifted *+0.40* on average after the evidence; the majority *+0.02*. 2 of 5 participants moved."
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "\u26a0\ufe0f Uptake is a *scenario demonstration*, not data-validated. The bridging result IS validated on 6,605 real Habermas sessions (Phase A)."
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Who was AI:* Maple (revealed only now, at debrief)"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "\ud83d\udcce Evidence injected at the deadlock via @Linden \u2014 source: https://www.4dayweek.com/uk-pilot-results"
+        }
+      ]
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "\ud83d\udcdc Every step logged \u2014 29 audit events for session `demo-5p-twocamp`"
+        }
+      ]
+    }
+  ]
+}

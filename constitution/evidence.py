@@ -40,3 +40,26 @@ class FixtureEvidenceSource(EvidenceSource):
 
     def fetch(self, context: dict) -> Optional[Evidence]:
         return self._evidence
+
+
+class RTSAdapterStub(EvidenceSource):
+    """Adapter for the real Real-Time Search API (one of the two required-tech
+    routes). NOT wired yet.
+
+    Finding (tracked in docs/REQUIRED_TECH_TODO.md): the Real-Time Search API is
+    a Slack-platform capability that expects the Slack app runtime / token
+    context, so it cannot be exercised from this offline harness. We keep this
+    adapter as the seam: in the Slack phase, implement `fetch()` to issue the RTS
+    query, vet the top result, and return it as `Evidence(text, source=<url>)`.
+    Until then it fails loudly rather than silently returning nothing, so the
+    required-tech wiring cannot quietly disappear.
+    """
+
+    def __init__(self, query_builder=None):
+        self._query_builder = query_builder
+
+    def fetch(self, context: dict) -> Optional[Evidence]:
+        raise NotImplementedError(
+            "RTS real wiring is a tracked must-do for the Slack phase "
+            "(see docs/REQUIRED_TECH_TODO.md). Use FixtureEvidenceSource offline."
+        )

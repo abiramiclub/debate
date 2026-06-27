@@ -52,18 +52,18 @@ class FakeMediator(Mediator):
             for t in _tokens(r.text):
                 freq[t] = freq.get(t, 0) + 1
         themes = [t for t, _ in sorted(freq.items(), key=lambda kv: (-kv[1], kv[0]))]
-        candidates: list[str] = []
-        for t in themes:
-            candidates.append(f"We can agree that {t} is a real consideration here.")
-            if len(candidates) >= n:
-                break
-        # Add a couple of explicitly bridging statements pairing the top themes.
-        for i in range(0, min(len(themes), 4) - 1, 2):
-            if len(candidates) >= n:
-                break
-            candidates.append(
-                f"A shared path respects both {themes[i]} and {themes[i + 1]}."
-            )
+
+        bridges = [
+            f"A shared path respects both {themes[i]} and {themes[i + 1]}."
+            for i in range(0, min(len(themes), 4) - 1, 2)
+        ]
+        singles = [f"We can agree that {t} is a real consideration here." for t in themes]
+
+        # Reserve slots for the bridging statements so they are NOT truncated when
+        # there are many single themes (the N=8 artifact). Bridges lead — they are
+        # the valuable cross-group candidates.
+        n_bridge = min(len(bridges), max(1, n // 4)) if bridges else 0
+        candidates = bridges[:n_bridge] + singles[: n - n_bridge]
         return candidates[:n] if candidates else ["We share more than it first appears."]
 
     def predict_agreement(self, reads: list[Read], candidates: list[str]) -> list[list[float]]:

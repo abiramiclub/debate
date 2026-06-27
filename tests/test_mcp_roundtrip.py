@@ -8,6 +8,7 @@ over MCP, with session state persisted server-side across the stateless calls.
 
 import asyncio
 import json
+import sys
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -24,7 +25,7 @@ def _payload(result):
 
 
 async def _drive_over_mcp(fixture: dict) -> dict:
-    params = StdioServerParameters(command="python", args=["-m", "mcp_server.server"])
+    params = StdioServerParameters(command=sys.executable, args=["-m", "mcp_server.server"])
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()

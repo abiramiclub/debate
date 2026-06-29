@@ -35,16 +35,26 @@ def final_metrics(fixture: dict, chosen_index: int) -> dict:
 
 
 def uptake(fixture: dict) -> dict:
-    """Information uptake from the fixture's pre/post positions (scenario only)."""
+    """Information uptake from the fixture's pre/post positions (scenario only).
+    Minority/majority are determined by camp SIZE, so this is agnostic to the
+    camp labels (pro/con, chatbot/wiki, …)."""
     pos = fixture["positions"]["by_participant"]
     deltas = [p["post"]["stance"] - p["pre"]["stance"] for p in pos]
     conf_deltas = [p["post"]["confidence"] - p["pre"]["confidence"] for p in pos]
-    minority = [d for p, d in zip(pos, deltas) if p["camp"] == "con"]
-    majority = [d for p, d in zip(pos, deltas) if p["camp"] == "pro"]
+
+    by_camp: dict[str, list[float]] = {}
+    for p, d in zip(pos, deltas):
+        by_camp.setdefault(p["camp"], []).append(d)
+    minority_camp = min(by_camp, key=lambda c: len(by_camp[c]))
+    majority_camp = max(by_camp, key=lambda c: len(by_camp[c]))
+    minority, majority = by_camp[minority_camp], by_camp[majority_camp]
+
     return {
         "mean_stance_shift": sum(deltas) / len(deltas),
         "minority_mean_shift": sum(minority) / len(minority) if minority else 0.0,
         "majority_mean_shift": sum(majority) / len(majority) if majority else 0.0,
+        "minority_camp": minority_camp,
+        "majority_camp": majority_camp,
         "moved_count": sum(1 for d in deltas if d > 0.05),
         "n": len(pos),
         "mean_confidence_delta": sum(conf_deltas) / len(conf_deltas),

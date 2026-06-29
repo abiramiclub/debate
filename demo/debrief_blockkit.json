@@ -11,14 +11,14 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Topic:* Should our team move to a four-day work week?"
+        "text": "*Topic:* How should we build our internal knowledge agent \u2014 a chatbot or a wiki?"
       }
     },
     {
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Outcome (bridged consensus):*\n>Pilot a four-day week with a Friday on-call rota to keep client coverage.\n\n*What majority-rule would have picked:*\n>Adopt a four-day week; productivity will hold."
+        "text": "*Outcome (bridged consensus):*\n>Build the sourced wiki first; add a thin conversational layer on top.\n\n*What majority-rule would have picked:*\n>Ship the chatbot; people want a chat UI."
       }
     },
     {
@@ -49,7 +49,7 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Information uptake (this scenario):* the minority shifted *+0.40* on average after the evidence; the majority *+0.02*. 2 of 5 participants moved."
+        "text": "*Information uptake (this scenario):* after the evidence, the *chatbot* camp moved *+0.27* toward the compromise (the *wiki* camp was already there, *+0.03*). 3 of 5 participants moved."
       }
     },
     {
@@ -68,7 +68,7 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Who was AI:* Maple (revealed only now, at debrief)"
+        "text": "*Who was AI:* Willow (revealed only now, at debrief)"
       }
     },
     {
@@ -76,7 +76,7 @@
       "elements": [
         {
           "type": "mrkdwn",
-          "text": "\ud83d\udcce Evidence injected at the deadlock via @Linden \u2014 source: https://www.4dayweek.com/uk-pilot-results"
+          "text": "\ud83d\udcce Evidence injected at the deadlock via @Linden \u2014 source: https://acme.slack.com/archives/C0INCIDENT/p1710336000000"
         }
       ]
     },

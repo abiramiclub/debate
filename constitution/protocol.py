@@ -22,7 +22,7 @@ from .audit import AuditLog
 from .bridging import cluster_participants, rank_candidates
 from .config import DEFAULT, Config
 from .evidence import Evidence, EvidenceSource
-from .neutrality import advocates_position
+from .neutrality import advocates_position, forecasts_outcome
 from .weighting import phase_index, raw_support, weighted_support
 
 # Small retry cap for regenerating mediator output that fails the neutrality gate.
@@ -109,14 +109,20 @@ class Session:
         self.winner_text: Optional[str] = None
 
     # --- CONSENT -------------------------------------------------------------
-    def start(self, participants: list[tuple[str, str]]) -> None:
-        """participants: list of (user_id, actor_type) where actor_type is
-        'human' or 'agent'. Assigns neutral handles and records consent."""
-        for i, (user_id, actor_type) in enumerate(participants):
-            handle = NEUTRAL_HANDLES[i % len(NEUTRAL_HANDLES)]
-            p = Participant(user_id=user_id, handle=handle, actor_type=actor_type)
-            self.participants.append(p)
-            self._by_handle[handle] = p
+    def start(self, participants: list[tuple]) -> None:
+        """participants: list of (user_id, actor_type) or
+        (user_id, actor_type, handle). actor_type is 'human' or 'agent'. If a
+        handle is supplied it is used (so a real Slack user maps to a fixed tree
+        handle); otherwise a neutral handle is assigned positionally."""
+        for i, p in enumerate(participants):
+            if len(p) == 3:
+                user_id, actor_type, handle = p
+            else:
+                user_id, actor_type = p
+                handle = NEUTRAL_HANDLES[i % len(NEUTRAL_HANDLES)]
+            participant = Participant(user_id=user_id, handle=handle, actor_type=actor_type)
+            self.participants.append(participant)
+            self._by_handle[handle] = participant
         self.audit.log(self.state, "Wiki", "system", "consent_recorded",
                        payload={"n": len(participants)})
         self.state = State.COLLECT_READS
@@ -131,34 +137,46 @@ class Session:
         self.audit.log(self.state, handle, self._by_handle[handle].actor_type,
                        "store_read", payload={"confidence": confidence, "text": text})
 
-    # --- neutrality gate (constitution↔mediator boundary) --------------------
+    # --- gates (constitution↔mediator boundary) ------------------------------
+    @staticmethod
+    def _gate_reason(text: str) -> Optional[str]:
+        """Which gate (if any) blocks this text: advocacy -> neutrality_rejected,
+        outcome forecast -> prediction_blocked, else None (passes)."""
+        if advocates_position(text):
+            return "neutrality_rejected"
+        if forecasts_outcome(text):
+            return "prediction_blocked"
+        return None
+
     def _gate_candidates(self, candidates: list[str]) -> list[str]:
-        """Keep only candidates that pass the neutrality gate. If a whole batch
-        advocates, regenerate up to the retry cap; rejected candidates are logged
-        and dropped. Never returns empty if any input existed (the engine needs
-        at least one candidate to rank)."""
-        kept = [c for c in candidates if not advocates_position(c)]
-        rejected = [c for c in candidates if advocates_position(c)]
+        """Keep only candidates that pass BOTH gates. If a whole batch is blocked,
+        regenerate up to the retry cap; blocked candidates are logged (with which
+        gate fired) and dropped. Never returns empty if any input existed (the
+        engine needs at least one candidate to rank)."""
+        kept = [c for c in candidates if self._gate_reason(c) is None]
+        rejected = [(c, self._gate_reason(c)) for c in candidates if self._gate_reason(c)]
         attempts = 0
         while not kept and attempts < _NEUTRALITY_RETRIES:
             attempts += 1
             regen = self.mediator.synthesize_candidates(self.reads, self.cfg.N_candidates)
-            kept = [c for c in regen if not advocates_position(c)]
-            rejected += [c for c in regen if advocates_position(c)]
-        for c in rejected:
-            self.audit.log(State.REVEAL, "Vicky", "agent", "neutrality_rejected",
+            kept = [c for c in regen if self._gate_reason(c) is None]
+            rejected += [(c, self._gate_reason(c)) for c in regen if self._gate_reason(c)]
+        for c, action in rejected:
+            self.audit.log(State.REVEAL, "Vicky", "agent", action,
                            payload={"kind": "candidate", "text": c})
         return kept or candidates  # last resort: proceed (already logged) over crashing
 
     def _gate_steelman(self, labels: list[int]) -> Optional[str]:
-        """Return a neutral steelman, regenerating up to the retry cap. If it keeps
-        advocating a conclusion, log and drop it (None)."""
+        """Return a steelman that passes both gates, regenerating up to the retry
+        cap. If it keeps advocating or forecasting, log (with which gate) and drop
+        it (None)."""
         for _ in range(_NEUTRALITY_RETRIES + 1):
             text = self.mediator.steelman_minority(self.reads, labels)
-            if not advocates_position(text):
+            action = self._gate_reason(text)
+            if action is None:
                 return text
-            self.audit.log(State.CROSS_INHIBITION, "Vicky", "agent",
-                           "neutrality_rejected", payload={"kind": "steelman", "text": text})
+            self.audit.log(State.CROSS_INHIBITION, "Vicky", "agent", action,
+                           payload={"kind": "steelman", "text": text})
         return None
 
     # --- REVEAL + rounds -----------------------------------------------------

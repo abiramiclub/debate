@@ -87,10 +87,10 @@ def build_blocks(fixture: dict, session, debrief: dict) -> dict:
             _md(f"*Bridging breadth*\n{m_bridge['breadth_ratio']:.2f} (1.00 = broadest available)"),
         ]},
         {"type": "section", "text": _md(
-            f"*Information uptake (this scenario):* the minority shifted "
-            f"*{up['minority_mean_shift']:+.2f}* on average after the evidence; "
-            f"the majority *{up['majority_mean_shift']:+.2f}*. "
-            f"{up['moved_count']} of {up['n']} participants moved.")},
+            f"*Information uptake (this scenario):* after the evidence, the "
+            f"*{up['majority_camp']}* camp moved *{up['majority_mean_shift']:+.2f}* toward the "
+            f"compromise (the *{up['minority_camp']}* camp was already there, "
+            f"*{up['minority_mean_shift']:+.2f}*). {up['moved_count']} of {up['n']} participants moved.")},
         {"type": "context", "elements": [_md(
             "⚠️ Uptake is a *scenario demonstration*, not data-validated. The "
             "bridging result IS validated on 6,605 real Habermas sessions (Phase A).")]},

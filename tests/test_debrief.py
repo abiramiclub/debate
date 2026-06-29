@@ -19,13 +19,14 @@ def _run():
     return fx, session, debrief
 
 
-def test_uptake_is_nontrivial_and_minority_led():
+def test_uptake_is_nontrivial_and_evidence_moves_the_dismissive_camp():
     fx, _, _ = _run()
     up = uptake(fx)
     assert up["mean_stance_shift"] > 0.05
-    # The minority (whose concern the evidence addresses) moves more than the majority.
-    assert up["minority_mean_shift"] > up["majority_mean_shift"]
     assert up["moved_count"] >= 1
+    # The evidence (the hallucination postmortem) addresses the minority's
+    # concern, so it moves the MAJORITY camp (which had been dismissive) most.
+    assert up["majority_mean_shift"] > up["minority_mean_shift"]
 
 
 def test_bridged_beats_naive_on_minority_support_this_session():

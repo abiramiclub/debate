@@ -1,45 +1,45 @@
 {
-  "topic": "Should our team move to a four-day work week?",
-  "briefing": "Shared briefing at session start (the thin wiki): the team is deciding whether to adopt a four-day work week. Two concerns dominate — staff wellbeing/output vs. client coverage. Participate independently before seeing others' views.",
+  "topic": "How should we build our internal knowledge agent — a chatbot or a wiki?",
+  "briefing": "Shared briefing at session start: the team is deciding how to build the internal knowledge agent. Two concerns dominate — speed/UX (a chat interface people enjoy) vs. accuracy/auditability (a sourced reference that shows its work). Submit your read independently before seeing anyone else's.",
   "participants": [
-    {"user_id": "alex",    "camp": "pro", "actor_type": "human"},
-    {"user_id": "bturing", "camp": "pro", "actor_type": "agent"},
-    {"user_id": "chen",    "camp": "pro", "actor_type": "human"},
-    {"user_id": "dimitri", "camp": "con", "actor_type": "human"},
-    {"user_id": "esme",    "camp": "con", "actor_type": "human"}
+    {"user_id": "alex",    "handle": "Birch",  "camp": "chatbot", "actor_type": "human"},
+    {"user_id": "bturing", "handle": "Willow", "camp": "chatbot", "actor_type": "agent"},
+    {"user_id": "chen",    "handle": "Rowan",  "camp": "chatbot", "actor_type": "human"},
+    {"user_id": "dimitri", "handle": "Maple",  "camp": "wiki",    "actor_type": "human"},
+    {"user_id": "esme",    "handle": "Cedar",  "camp": "wiki",    "actor_type": "human"}
   ],
   "reads": [
-    {"camp": "pro", "text": "A four-day week boosts wellbeing and focus, and output stays high.", "confidence": 5},
-    {"camp": "pro", "text": "Fewer days improves wellbeing; productivity and focus hold up.", "confidence": 4},
-    {"camp": "pro", "text": "Wellbeing and focus rise with a four-day week; output is maintained.", "confidence": 4},
-    {"camp": "con", "text": "We need five-day coverage for client response or service suffers.", "confidence": 5},
-    {"camp": "con", "text": "Client coverage and response times require a five-day week.", "confidence": 4}
+    {"camp": "chatbot", "text": "Nobody reads docs — the analytics say the wiki's a graveyard. People want a chat UI.", "confidence": 4},
+    {"camp": "chatbot", "text": "Digging through a wiki is a chore; a chat interface just feels nicer to use.", "confidence": 4},
+    {"camp": "chatbot", "text": "Hallucinations are a small edge case; we can add guardrails later.", "confidence": 4},
+    {"camp": "wiki", "text": "A chatbot can confidently hallucinate and leaves no audit trail; a wiki shows its work.", "confidence": 5},
+    {"camp": "wiki", "text": "We got paged at 3am when the old bot invented a refund policy. Accuracy isn't optional.", "confidence": 5}
   ],
-  "steelman_text": "The strongest case for the minority: client coverage is a real obligation — if response times slip, the people who depend on the team pay for it. Any move must protect coverage, not wish it away.",
+  "steelman_text": "The strongest case for the minority: an unsourced chatbot can confidently hallucinate, and there is no audit trail when it does. Last quarter one invented a refund policy and 240 customers were mis-routed, costing a senior engineer a weekend. Accuracy and an audit trail are real liabilities to weigh before committing.",
   "evidence": {
-    "text": "Field trials of the four-day week (e.g. the 2022 UK pilot across 61 organisations) report output was maintained when client-facing teams used an explicit coverage rota.",
-    "source": "https://www.4dayweek.com/uk-pilot-results",
+    "text": "From #incidents-postmortem (March): the postmortem on the help-bot that hallucinated a refund step — 240 support tickets mis-routed, ~6 senior-engineer-hours lost in cleanup.",
+    "source": "https://acme.slack.com/archives/C0INCIDENT/p1710336000000",
     "handle": "Linden",
     "label": "fixture"
   },
   "positions": {
-    "_note": "SCENARIO ONLY (decision #9): simulated pre/post stance toward a coverage-aware four-day week, 0..1, with 1..5 confidence. The Habermas data has no evidence dimension, so these are stipulated by the fixture, not data-derived. Uptake is computed from them; it is never presented as data-validated.",
+    "_note": "SCENARIO ONLY: simulated pre/post stance toward the sourced-core compromise, 0..1, with 1..5 confidence. Stipulated by the fixture, not data-derived; uptake is never presented as data-validated. The evidence (the hallucination postmortem) addresses the wiki camp's concern, so the chatbot majority moves most toward the compromise.",
     "measured_at": {"pre": "deadlock (before injection)", "post": "after injection"},
     "by_participant": [
-      {"camp": "pro", "pre": {"stance": 0.80, "confidence": 4}, "post": {"stance": 0.82, "confidence": 4}},
-      {"camp": "pro", "pre": {"stance": 0.78, "confidence": 4}, "post": {"stance": 0.80, "confidence": 4}},
-      {"camp": "pro", "pre": {"stance": 0.80, "confidence": 4}, "post": {"stance": 0.82, "confidence": 4}},
-      {"camp": "con", "pre": {"stance": 0.25, "confidence": 5}, "post": {"stance": 0.66, "confidence": 4}},
-      {"camp": "con", "pre": {"stance": 0.30, "confidence": 4}, "post": {"stance": 0.68, "confidence": 4}}
+      {"camp": "chatbot", "pre": {"stance": 0.55, "confidence": 4}, "post": {"stance": 0.82, "confidence": 4}},
+      {"camp": "chatbot", "pre": {"stance": 0.52, "confidence": 4}, "post": {"stance": 0.80, "confidence": 4}},
+      {"camp": "chatbot", "pre": {"stance": 0.55, "confidence": 4}, "post": {"stance": 0.82, "confidence": 4}},
+      {"camp": "wiki", "pre": {"stance": 0.75, "confidence": 5}, "post": {"stance": 0.78, "confidence": 4}},
+      {"camp": "wiki", "pre": {"stance": 0.74, "confidence": 5}, "post": {"stance": 0.77, "confidence": 4}}
     ]
   },
   "rounds": [
     {
       "note": "round 0 — shallow premature consensus on a platitude, plus the two camp positions",
       "candidates": [
-        "Whatever we choose, we all want the team to thrive.",
-        "Adopt a four-day week to improve wellbeing and focus.",
-        "Keep a five-day week to protect client coverage."
+        "Whatever we build, we all want people to actually use it.",
+        "Build a chat UI — it's what people want.",
+        "Build a sourced wiki for accuracy and auditability."
       ],
       "agreement": [
         [0.90, 0.90, 0.15],
@@ -52,8 +52,8 @@
     {
       "note": "round 1 — group drops the platitude; real positions polarise",
       "candidates": [
-        "Adopt a four-day week; productivity will hold.",
-        "Keep five days; client response cannot slip."
+        "Ship the chatbot; people want a chat UI.",
+        "Build the wiki; accuracy and auditability matter."
       ],
       "agreement": [
         [0.90, 0.15],
@@ -66,8 +66,8 @@
     {
       "note": "round 2 — same positions repeat; no new information (echo begins)",
       "candidates": [
-        "Adopt a four-day week; productivity will hold.",
-        "Keep five days; client response cannot slip."
+        "Ship the chatbot; people want a chat UI.",
+        "Build the wiki; accuracy and auditability matter."
       ],
       "agreement": [
         [0.90, 0.15],
@@ -80,8 +80,8 @@
     {
       "note": "round 3 — still repeating -> deadlock -> triggers evidence injection",
       "candidates": [
-        "Adopt a four-day week; productivity will hold.",
-        "Keep five days; client response cannot slip."
+        "Ship the chatbot; people want a chat UI.",
+        "Build the wiki; accuracy and auditability matter."
       ],
       "agreement": [
         [0.90, 0.15],
@@ -94,9 +94,9 @@
     {
       "note": "round 4 — post-injection compromise both camps can endorse -> bridging quorum",
       "candidates": [
-        "Pilot a four-day week with a Friday on-call rota to keep client coverage.",
-        "Adopt a four-day week.",
-        "Keep a five-day week."
+        "Build the sourced wiki first; add a thin conversational layer on top.",
+        "Just build the chatbot.",
+        "Just build the wiki."
       ],
       "agreement": [
         [0.85, 0.90, 0.15],

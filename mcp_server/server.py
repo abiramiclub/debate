@@ -58,7 +58,9 @@ def start_session(session_id: str, participants: list[dict]) -> dict:
     # A placeholder mediator is set now; the real/scripted one is supplied at
     # deliberate() time (the agent owns the language work).
     session = Session(session_id, FakeMediator(), path)
-    session.start([(p["user_id"], p["actor_type"]) for p in participants])
+    session.start([
+        (p["user_id"], p["actor_type"], p["handle"]) if p.get("handle")
+        else (p["user_id"], p["actor_type"]) for p in participants])
     _SESSIONS[session_id] = session
     return {"session_id": session_id,
             "handles": [p.handle for p in session.participants],

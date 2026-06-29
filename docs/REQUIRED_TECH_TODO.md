@@ -16,23 +16,27 @@ workspace token** (RTS), and an **OpenClaw endpoint / API key** (mediator).
 
 ## 1. Real-Time Search (RTS) API — evidence injection
 
-- **Status:** stubbed. `constitution/evidence.RTSAdapterStub.fetch()` raises
-  `NotImplementedError`; the offline demo uses `FixtureEvidenceSource`.
-- **Why stubbed:** RTS is a Slack-platform capability that expects the Slack app
-  runtime / token context, so it cannot be exercised from this offline harness.
-- **Seam is in place:** the constitution already calls `EvidenceSource.fetch()`
-  at the deadlock and logs the returned `source` to the audit. Swapping the
-  fixture source for a live RTS adapter requires **no protocol change**.
-- **Slack-phase task:** implement `RTSAdapterStub.fetch()` to (a) build a query
-  from the deadlock context, (b) issue the RTS call, (c) vet the top result and
-  run it through the position-neutrality check, (d) return
-  `Evidence(text=..., source=<url>)`.
+- **Status:** adapter **built and real** — `constitution/evidence.RTSAdapter` calls
+  Slack `assistant.search.context`, parses the top result, and runs it through the
+  position-neutrality gate, returning `Evidence(text, source=<permalink>)`. Offline
+  parse + neutrality behavior proven in `tests/test_rts.py`. `RTSAdapterStub`
+  remains only as the not-configured placeholder (fails loudly).
+- **Seam in place:** the constitution calls `EvidenceSource.fetch()` at the
+  deadlock and logs the returned `source` to the audit — swapping the fixture
+  source for `RTSAdapter` needs **no protocol change**.
+- **Remaining (needs a live workspace token):** run `RTSAdapter(token).fetch({...})`
+  against the sandbox and **confirm the live `assistant.search.context` response
+  field names**; fix `_call`/`fetch` mapping if they differ from the defensive
+  defaults (`results`/`messages.matches`, `text`/`content`, `permalink`/`url`).
+  The token-gated live test in `tests/test_rts.py` runs once `SLACK_RTS_TOKEN` is set.
 
 ## 2. MCP server integration — the engine
 
-- **Status:** not built this phase (deliberately).
-- **Plan:** wrap the deterministic engine (`start_session`, `store_read`,
-  `rank_bridging`, `check_quorum`, `inject_evidence`, `get_audit`) as MCP tools
-  the Slack agent calls. This is the core required technology.
-- **Risk to retire early:** the MCP↔Slack seam is the least-documented part;
-  validate the connection first in the Slack phase, not last.
+- **Status:** **BUILT and PROVEN.** `mcp_server/server.py` wraps the frozen engine
+  as MCP tools (`start_session`, `submit_read`, `deliberate`, `rank_bridging`,
+  `check_quorum`, `inject_evidence`, `get_audit`, `debrief`) with server-side
+  session state. `python -m mcp_server.seam_check` passes; `tests/test_mcp_roundtrip.py`
+  drives a full 5-person deliberation entirely over MCP to the bridged quorum.
+- **Remaining:** connect the Slack app (`slack_app/`) as the MCP **client** to this
+  server (stdio) — the agent produces the mediator's language work and passes it
+  into `deliberate`. Validate the client connection early; it's the least-documented seam.

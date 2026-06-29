@@ -44,7 +44,9 @@ def run_constitution(fx: dict, audit_path: str):
         text=ev["text"], source=ev["source"], handle=ev["handle"], label=ev["label"]))
 
     session = Session("demo-5p-twocamp", mediator, audit_path, evidence_source=source)
-    session.start([(p["user_id"], p["actor_type"]) for p in fx["participants"]])
+    session.start([
+        (p["user_id"], p["actor_type"], p["handle"]) if p.get("handle")
+        else (p["user_id"], p["actor_type"]) for p in fx["participants"]])
     for p, r in zip(session.participants, fx["reads"]):
         session.submit_read(p.handle, r["text"], r["confidence"])
     results = session.deliberate(max_rounds=6)

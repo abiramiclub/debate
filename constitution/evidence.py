@@ -69,13 +69,17 @@ class RTSAdapter(EvidenceSource):
     BASE = "https://slack.com/api"
 
     def __init__(self, token: str, base_url: Optional[str] = None,
-                 handle: str = "Linden", limit: int = 5):
+                 handle: str = "Linden", limit: int = 5,
+                 action_token: Optional[str] = None):
         if not token:
             raise ValueError("RTSAdapter requires a Slack token (xoxb/xoxp).")
         self._token = token
         self._base = base_url or self.BASE
         self._handle = handle
         self._limit = limit
+        # Bot-token calls to assistant.search.context require a per-event
+        # `action_token` captured from a message / app_mention event payload.
+        self._action_token = action_token
 
     def _build_query(self, context: dict) -> str:
         if context.get("query"):
@@ -85,7 +89,12 @@ class RTSAdapter(EvidenceSource):
         return terms or "background evidence"
 
     def _call(self, query: str) -> list[dict]:
-        data = urllib.parse.urlencode({"query": query, "limit": self._limit}).encode()
+        params = {"query": query, "limit": self._limit}
+        # A per-event action_token authorizes the bot-token search call.
+        action_token = self._action_token
+        if action_token:
+            params["action_token"] = action_token
+        data = urllib.parse.urlencode(params).encode()
         req = urllib.request.Request(
             f"{self._base}/assistant.search.context", data=data,
             headers={"Authorization": f"Bearer {self._token}",

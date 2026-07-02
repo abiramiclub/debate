@@ -37,7 +37,7 @@ def _extract_json(text: str):
 
 
 class ClaudeMediator(Mediator):
-    def __init__(self, client=None, model: str = "claude-opus-4-8"):
+    def __init__(self, client=None, model: str = "claude-sonnet-5"):
         self._client = client
         self._model = model
 

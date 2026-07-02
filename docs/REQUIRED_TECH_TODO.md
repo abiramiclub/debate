@@ -24,11 +24,16 @@ workspace token** (RTS), and an **OpenClaw endpoint / API key** (mediator).
 - **Seam in place:** the constitution calls `EvidenceSource.fetch()` at the
   deadlock and logs the returned `source` to the audit — swapping the fixture
   source for `RTSAdapter` needs **no protocol change**.
-- **Remaining (needs a live workspace token):** run `RTSAdapter(token).fetch({...})`
-  against the sandbox and **confirm the live `assistant.search.context` response
-  field names**; fix `_call`/`fetch` mapping if they differ from the defensive
-  defaults (`results`/`messages.matches`, `text`/`content`, `permalink`/`url`).
-  The token-gated live test in `tests/test_rts.py` runs once `SLACK_RTS_TOKEN` is set.
+- **Auth model (decided):** scope is **`search:read.public`** (public channels only).
+  Bot-token calls need a **per-event `action_token`** captured from an `app_mention` /
+  `message.channels` event (subscribed in `slack_app/manifest.yaml`) and passed as
+  `RTSAdapter(token=…, action_token=…)`. Offline-proven the token is sent + result
+  parsed in `tests/test_rts.py::test_action_token_is_sent_and_result_parsed`.
+- **Remaining (needs a live workspace token):** run against the sandbox and **confirm
+  the live `assistant.search.context` response field names**; fix `_call`/`fetch`
+  mapping only if they differ from the defensive defaults (`results`/`messages.matches`,
+  `text`/`content`, `permalink`/`url`). The token-gated live test in `tests/test_rts.py`
+  runs once `SLACK_RTS_TOKEN` is set.
 
 ## 2. MCP server integration — the engine
 

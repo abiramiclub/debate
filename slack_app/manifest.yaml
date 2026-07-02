@@ -17,16 +17,19 @@ features:
 oauth_config:
   scopes:
     bot:
-      - commands          # /decide
-      - chat:write        # post Vicky/Wiki messages + debrief to the channel
-      - im:write          # DM the private read modal card
-      - users:read        # map real users -> neutral handles
-      # Real-Time Search (assistant.search.context) — required-tech route.
-      # Confirm the exact scope against the live Slack docs before submission;
-      # candidates seen for the RTS/assistant surface:
-      # - assistant:write
-      # - search:read.public
+      - commands            # /decide
+      - chat:write          # post Vicky/Wiki messages + debrief to the channel
+      - im:write            # DM the private read modal card
+      - users:read          # map real users -> neutral handles
+      - search:read.public  # Real-Time Search (assistant.search.context)
 settings:
+  # Bot-token calls to assistant.search.context need a per-event `action_token`,
+  # captured from a message / app_mention event payload. Evidence is searched in
+  # PUBLIC channels only (search:read.public).
+  event_subscriptions:
+    bot_events:
+      - app_mention
+      - message.channels
   socket_mode_enabled: true      # dev via SLACK_APP_TOKEN (connections:write)
   interactivity:
     is_enabled: true             # consent button + read modal

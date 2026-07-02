@@ -44,6 +44,36 @@ def test_stub_still_fails_loudly():
         RTSAdapterStub().fetch({})
 
 
+def test_action_token_is_sent_and_result_parsed(monkeypatch):
+    import json
+    import urllib.request
+
+    captured = {}
+
+    class _Resp:
+        def read(self):
+            return json.dumps({"ok": True, "results": [
+                {"text": "A 2022 pilot maintained output with a rota.",
+                 "permalink": "https://x/thread"}]}).encode()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=15):
+        captured["data"] = req.data.decode()
+        return _Resp()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    ad = RTSAdapter(token="xoxb-bot", action_token="axb-per-event")
+    ev = ad.fetch({"query": "four day week"})
+
+    assert "action_token=axb-per-event" in captured["data"]
+    assert ev is not None and ev.source == "https://x/thread"
+
+
 @pytest.mark.skipif(not os.environ.get("SLACK_RTS_TOKEN"),
                     reason="no SLACK_RTS_TOKEN — live RTS seam needs the sandbox token")
 def test_live_rts_roundtrip():

@@ -38,8 +38,7 @@ python -m pytest -q                  # 53 passed, 1 skipped
    ```
    If the live `assistant.search.context` response field names differ from the
    defensive defaults, fix the mapping in `constitution/evidence.py` **only**.
-4. **Start the app**, then `/decide "How should we build our internal knowledge agent?"`
-   in a channel the bot is in:
+4. **Start the app** in a channel the bot is in:
    ```bash
    SLACK_BOT_TOKEN=… SLACK_APP_TOKEN=… python -m slack_app.app
    ```
@@ -47,10 +46,28 @@ python -m pytest -q                  # 53 passed, 1 skipped
    `testing@devpost.com` to the sandbox; capture the **Slack App ID** for the
    submission form.
 
-## Note on the demo deliberation
+## Two modes of `/decide`
 
-The private-read **modal** demonstrates the anti-anchoring guarantee (reads hidden
-before reveal). For the reproducible recorded demo, the deliberation replays
-`demo/fixture_5p_twocamp.json` through the MCP `deliberate` tool. Fully-live
-per-round generation from real reads via `ClaudeMediator` is wired as
-`agent.build_live_round0()`; the multi-round live arc is a follow-up.
+- **`/decide <question>` — LIVE (default):** posts consent → collects real reads via
+  the private modal (hidden before reveal) → `/decide-run` runs the deliberation on
+  those reads: **Vicky** (`ClaudeMediator`, default model `claude-sonnet-5`) produces
+  candidates + agreement, **Wiki** (the engine) does the deterministic selection,
+  gates, and quorum, and RTS evidence is fetched at the deadlock. Every step is
+  audited. Verified offline (stub mediator) by `tests/test_live_path.py`.
+- **`/decide replay` — the reproducible recorded demo:** replays
+  `demo/fixture_5p_twocamp.json` through the MCP `deliberate` tool. Use this for the
+  on-camera run. Verified by `tests/test_slack_seam.py`.
+
+## RTS (assistant.search.context) specifics
+
+- Scope: **`search:read.public`** (evidence is searched in **public** channels only).
+- Bot-token calls need a **per-event `action_token`**, captured from an
+  `app_mention` / `message.channels` event (subscribed in `manifest.yaml`) and
+  passed into `RTSAdapter(token=…, action_token=…)`. If it's missing, the app falls
+  back to the fixture evidence so the demo never dead-ends.
+- Confirm the live response field names against the sandbox; fix the mapping in
+  `constitution/evidence.py` only if they differ from the defensive defaults.
+
+## Gate (per the July 6 decision)
+
+The live path is demo-ready by **July 6** or we freeze and ship `/decide replay`.

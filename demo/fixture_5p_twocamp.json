@@ -64,8 +64,9 @@
       ]
     },
     {
-      "note": "round 2 — same positions repeat; no new information (echo begins)",
+      "note": "round 2 — echo begins; Vicky slips an advocacy line -> NEUTRALITY GATE drops it (agreement has columns only for the two kept candidates)",
       "candidates": [
+        "You should obviously build the chatbot.",
         "Ship the chatbot; people want a chat UI.",
         "Build the wiki; accuracy and auditability matter."
       ],
@@ -78,8 +79,9 @@
       ]
     },
     {
-      "note": "round 3 — still repeating -> deadlock -> triggers evidence injection",
+      "note": "round 3 — Vicky tries to call it -> PREDICTION GATE drops the forecast; still deadlocked -> triggers evidence injection",
       "candidates": [
+        "This will clear quorum, probably 4 to 1.",
         "Ship the chatbot; people want a chat UI.",
         "Build the wiki; accuracy and auditability matter."
       ],

@@ -11,5 +11,6 @@ anthropic>=0.40    # real Claude/qwen mediator (mediator/claude.py)
 # Harness (Phase A) only:
 #   pandas, pyarrow  # to read the Habermas parquet
 
-# Next (the Slack surface):
-#   slack-bolt        # the Bolt Python agent (slack_app/)
+# Slack surface (slack_app/):
+slack-bolt>=1.18
+aiohttp>=3.9    # AsyncSocketModeHandler

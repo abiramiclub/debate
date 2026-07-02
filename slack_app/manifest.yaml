@@ -1,0 +1,34 @@
+# Slack app manifest — Wiki & Vicky (a deliberation mediator).
+# Create the app from this at https://api.slack.com/apps → "From an app manifest".
+# Socket Mode is on (dev), so no public request URLs are needed.
+display_information:
+  name: Wiki & Vicky
+  description: A deliberation mediator — fair group decisions, resistant to groupthink.
+  background_color: "#1f2937"
+features:
+  bot_user:
+    display_name: wiki-vicky
+    always_online: true
+  slash_commands:
+    - command: /decide
+      description: Start a mediated deliberation on a question
+      usage_hint: "[the question to decide]"
+      should_escape: false
+oauth_config:
+  scopes:
+    bot:
+      - commands          # /decide
+      - chat:write        # post Vicky/Wiki messages + debrief to the channel
+      - im:write          # DM the private read modal card
+      - users:read        # map real users -> neutral handles
+      # Real-Time Search (assistant.search.context) — required-tech route.
+      # Confirm the exact scope against the live Slack docs before submission;
+      # candidates seen for the RTS/assistant surface:
+      # - assistant:write
+      # - search:read.public
+settings:
+  socket_mode_enabled: true      # dev via SLACK_APP_TOKEN (connections:write)
+  interactivity:
+    is_enabled: true             # consent button + read modal
+  org_deploy_enabled: false
+  token_rotation_enabled: false

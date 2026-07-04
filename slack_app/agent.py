@@ -22,6 +22,33 @@ def participants_payload(fixture: dict) -> list[dict]:
             for p in fixture["participants"]]
 
 
+def seed_persona_reads(fixture: dict, human_handle: str) -> dict[str, dict]:
+    """For solo filming: return every fixture participant's read EXCEPT the one
+    the live human plays (`human_handle`), keyed by handle. The human submits the
+    remaining read live via the modal."""
+    out: dict[str, dict] = {}
+    for p, r in zip(fixture["participants"], fixture["reads"]):
+        if p["handle"] != human_handle:
+            out[p["handle"]] = {"handle": p["handle"], "text": r["text"],
+                                "confidence": r["confidence"]}
+    return out
+
+
+def ordered_reads(fixture: dict, reads_by_handle: dict[str, dict]) -> list[dict]:
+    """Assemble reads in fixture participant order (so agreement rows align)."""
+    order = [p["handle"] for p in fixture["participants"]]
+    return [reads_by_handle[h] for h in order if h in reads_by_handle]
+
+
+def participants_for_reads(fixture: dict, reads: list[dict]) -> list[dict]:
+    """The participant payloads matching the handles present in `reads`, in order
+    (preserves actor_type, e.g. Willow=agent, for the debrief reveal)."""
+    handles = [r["handle"] for r in reads]
+    by_handle = {p["handle"]: p for p in fixture["participants"]}
+    return [{"user_id": by_handle[h]["user_id"], "actor_type": by_handle[h]["actor_type"],
+             "handle": h} for h in handles if h in by_handle]
+
+
 async def run_session_over_mcp(fixture: dict, session_id: str = "slack-demo") -> dict:
     """Drive an entire deliberation to debrief ENTIRELY over MCP. Returns the
     started handles, the per-round deliberation result, the audit, and the debrief.

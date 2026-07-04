@@ -58,6 +58,25 @@ class _StubClient:
         return SimpleNamespace(content=[SimpleNamespace(text=text)])
 
 
+def test_seed_personas_excludes_human_and_orders():
+    from slack_app.agent import ordered_reads, participants_for_reads, seed_persona_reads
+    from slack_app.run_scripted import load_fixture
+
+    fx = load_fixture()
+    seeded = seed_persona_reads(fx, "Cedar")
+    assert set(seeded) == {"Birch", "Willow", "Rowan", "Maple"}  # 4 personas, human excluded
+    assert "Cedar" not in seeded
+
+    seeded["Cedar"] = {"handle": "Cedar", "text": "my real live read", "confidence": 5}
+    reads = ordered_reads(fx, seeded)
+    assert [r["handle"] for r in reads] == ["Birch", "Willow", "Rowan", "Maple", "Cedar"]
+
+    parts = participants_for_reads(fx, reads)
+    assert [p["handle"] for p in parts] == ["Birch", "Willow", "Rowan", "Maple", "Cedar"]
+    # The AI seat (Willow) is preserved for the debrief reveal.
+    assert next(p for p in parts if p["handle"] == "Willow")["actor_type"] == "agent"
+
+
 def test_live_path_reaches_bridged_quorum_over_mcp():
     out = asyncio.run(run_live_session_over_mcp(
         question="chatbot or wiki?", reads=READS, participants=PARTICIPANTS,

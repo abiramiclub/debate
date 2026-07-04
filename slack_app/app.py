@@ -180,17 +180,30 @@ def build_app():
 
 
 async def _main() -> None:
+    import logging
     from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
+
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger("wiki-vicky")
 
     for var in ("SLACK_BOT_TOKEN", "SLACK_APP_TOKEN"):
         if not os.environ.get(var):
             raise SystemExit(f"missing env var {var}")
     if _STATE["seed"]:
         print(f"[seed-personas] the live human plays '{_STATE['human_handle']}'; "
-              f"the other four reads are seeded from the fixture.")
+              f"the other four reads are seeded from the fixture.", flush=True)
     app = build_app()
     handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
-    await handler.start_async()
+    # Establish the socket, log a clear line, then stay up (survives detached).
+    if hasattr(handler, "connect_async"):
+        await handler.connect_async()
+        log.info("connected to Slack (Socket Mode) — /decide is live")
+        print("connected", flush=True)
+        await asyncio.Event().wait()
+    else:  # older slack-bolt: start_async connects + blocks
+        log.info("starting Socket Mode…")
+        print("connected", flush=True)
+        await handler.start_async()
 
 
 def main() -> None:

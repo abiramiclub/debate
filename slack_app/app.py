@@ -21,12 +21,15 @@ import json
 import os
 
 from slack_app import render
-from slack_app.agent import run_live_session_over_mcp, run_session_over_mcp
+from slack_app.agent import (
+    ordered_reads, participants_for_reads, run_live_session_over_mcp,
+    run_session_over_mcp, seed_persona_reads)
 
 _FIXTURE = os.path.join(os.path.dirname(__file__), "..", "demo", "fixture_5p_twocamp.json")
 
 # Minimal in-memory demo state (single concurrent session).
-_STATE: dict = {"action_token": None, "question": None, "channel": None, "reads": []}
+_STATE: dict = {"action_token": None, "question": None, "channel": None,
+                "reads_by_handle": {}, "seed": False, "human_handle": "Cedar"}
 
 
 def _load_fixture() -> dict:
@@ -111,7 +114,7 @@ def build_app():
         await ack()
         channel = body["channel_id"]
         text = (body.get("text") or "").strip()
-        _STATE.update(channel=channel, reads=[])
+        _STATE.update(channel=channel, reads_by_handle={})
 
         if text.lower().startswith("replay"):
             await _post(client, channel, render.vicky("Replaying the recorded deliberation…"),
@@ -130,8 +133,20 @@ def build_app():
         channel = body["container"]["channel_id"]
         cast = [p["handle"] for p in fx["participants"]]
         await _post(client, channel, render.handles_blocks(cast), "Handles assigned")
+
+        # Solo filming: seed the other personas' reads; the human plays one handle.
+        if _STATE["seed"]:
+            human = _STATE["human_handle"]
+            _STATE["reads_by_handle"] = seed_persona_reads(fx, human)
+            modal_handle = human
+            await _post(client, channel, render.vicky(
+                f"Personas seeded ({', '.join(_STATE['reads_by_handle'])}). "
+                f"You're *{human}* — submit your read."), "seeded")
+        else:
+            modal_handle = cast[0]
+
         await client.views_open(trigger_id=body["trigger_id"],
-                                view=render.read_modal("slack-live", cast[0]))
+                                view=render.read_modal("slack-live", modal_handle))
         await _post(client, channel, render.vicky(
             "Once reads are in, run the deliberation with the button… or `/decide replay`.")
             + [{"type": "actions", "elements": [{
@@ -144,7 +159,8 @@ def build_app():
         meta = json.loads(view["private_metadata"])
         text = view["state"]["values"]["read"]["text"]["value"]
         conf = int(view["state"]["values"]["confidence"]["value"]["selected_option"]["value"])
-        _STATE["reads"].append({"handle": meta["handle"], "text": text, "confidence": conf})
+        _STATE["reads_by_handle"][meta["handle"]] = {
+            "handle": meta["handle"], "text": text, "confidence": conf}
         await ack()
 
     @app.action("run_live")
@@ -152,9 +168,8 @@ def build_app():
         """Run the LIVE deliberation on the collected reads (real ClaudeMediator)."""
         await ack()
         channel = body["container"]["channel_id"]
-        reads = _STATE["reads"] or fx["reads"]  # fall back to fixture reads for a solo demo
-        participants = [{"user_id": p["user_id"], "actor_type": p["actor_type"],
-                         "handle": p["handle"]} for p in fx["participants"]][:len(reads)]
+        reads = ordered_reads(fx, _STATE["reads_by_handle"]) or fx["reads"]  # fallback for solo
+        participants = participants_for_reads(fx, reads)
         evidence = _rts_evidence(_STATE.get("question", ""), reads)
         result = await run_live_session_over_mcp(
             _STATE.get("question", ""), reads, participants=participants, evidence=evidence,
@@ -170,12 +185,18 @@ async def _main() -> None:
     for var in ("SLACK_BOT_TOKEN", "SLACK_APP_TOKEN"):
         if not os.environ.get(var):
             raise SystemExit(f"missing env var {var}")
+    if _STATE["seed"]:
+        print(f"[seed-personas] the live human plays '{_STATE['human_handle']}'; "
+              f"the other four reads are seeded from the fixture.")
     app = build_app()
     handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     await handler.start_async()
 
 
 def main() -> None:
+    import sys
+    _STATE["seed"] = "--seed-personas" in sys.argv
+    _STATE["human_handle"] = os.environ.get("WIKI_HUMAN_HANDLE", "Cedar")
     asyncio.run(_main())
 
 

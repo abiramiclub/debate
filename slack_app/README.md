@@ -58,6 +58,28 @@ python -m pytest -q                  # 53 passed, 1 skipped
   `demo/fixture_5p_twocamp.json` through the MCP `deliberate` tool. Use this for the
   on-camera run. Verified by `tests/test_slack_seam.py`.
 
+## Solo filming — `--seed-personas`
+
+Film LIVE mode alone: seed four persona reads from the fixture and submit **one**
+real read yourself.
+
+```bash
+# You play "Cedar" by default; override with WIKI_HUMAN_HANDLE=Maple etc.
+WIKI_HUMAN_HANDLE=Cedar python -m slack_app.app --seed-personas
+```
+
+Then, in a public channel the bot is in:
+1. `/decide "How should we build our internal knowledge agent?"` → click **Consent & join**.
+2. The other four reads (Birch / Willow / Rowan / Maple) are seeded automatically;
+   the modal opens for **your** handle (Cedar). Submit your real read.
+3. Click **Run deliberation (live)**. Vicky generates candidates live from all five
+   reads; the engine selects/gates/reaches quorum; RTS pulls evidence from
+   **#incidents-postmortem** (public); the debrief reveals Willow was the AI seat.
+
+Reads stay in fixture participant order so agreement rows align, and Willow remains
+the revealed AI seat. Verified offline by
+`tests/test_live_path.py::test_seed_personas_excludes_human_and_orders`.
+
 ## RTS (assistant.search.context) specifics
 
 - Scope: **`search:read.public`** (evidence is searched in **public** channels only).

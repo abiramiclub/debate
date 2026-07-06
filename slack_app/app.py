@@ -74,6 +74,17 @@ async def _post_beats(client, channel, result: dict, steelman_text: str):
     await _post(client, channel, render.debrief_blocks(), "Debrief")
 
 
+async def _run_replay_or_report(client, channel: str, user_id: str, fx: dict) -> None:
+    """`/decide replay`: run the recorded demo and post its beats. Never fails
+    silently on camera — any error is reported as an ephemeral to the invoker."""
+    await _post(client, channel, render.vicky("Replaying the recorded deliberation…"), "replay")
+    try:
+        result = await run_session_over_mcp(fx, session_id="slack-replay")
+        await _post_beats(client, channel, result, fx["steelman_text"])
+    except Exception as err:  # noqa: BLE001 — never fail silently on camera
+        await client.chat_postEphemeral(channel=channel, user=user_id, text=f"Replay failed: {err}")
+
+
 def _rts_evidence(question: str, reads: list[dict]) -> dict | None:
     """Fetch sourced evidence via live RTS (needs a token + per-event action_token);
     fall back to the fixture evidence so the demo never dead-ends."""
@@ -117,10 +128,7 @@ def build_app():
         _STATE.update(channel=channel, reads_by_handle={})
 
         if text.lower().startswith("replay"):
-            await _post(client, channel, render.vicky("Replaying the recorded deliberation…"),
-                        "replay")
-            result = await run_session_over_mcp(fx, session_id="slack-replay")
-            await _post_beats(client, channel, result, fx["steelman_text"])
+            await _run_replay_or_report(client, channel, body["user_id"], fx)
             return
 
         _STATE["question"] = text or "How should we build our internal knowledge agent?"

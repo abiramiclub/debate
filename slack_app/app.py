@@ -19,6 +19,7 @@ are verified offline by tests/test_slack_seam.py (replay) and tests/test_live_pa
 import asyncio
 import json
 import os
+import random
 
 from slack_app import render
 from slack_app.agent import (
@@ -29,7 +30,39 @@ _FIXTURE = os.path.join(os.path.dirname(__file__), "..", "demo", "fixture_5p_two
 
 # Minimal in-memory demo state (single concurrent session).
 _STATE: dict = {"action_token": None, "question": None, "channel": None,
-                "reads_by_handle": {}, "seed": False, "human_handle": "Cedar"}
+                "reads_by_handle": {}, "seed": False, "human_handle": "Cedar", "cinema": False}
+
+# Cinema mode: replay `/decide replay` at human pace instead of one burst, for
+# recording. Seconds of delay BEFORE that beat posts. Replay only — live mode is
+# unaffected. Total ~=2:16 opener->debrief; jitter (+-1s) is added per beat.
+CINEMA_PACING = [
+    ("opener",            0),   # question + consent card
+    ("handles",           8),
+    ("replay_banner",     6),   # KEEP the banner — the VO narrates determinism as a feature
+    ("reveal_camps",     18),
+    ("cross_inhibition", 20),
+    ("steelman",         10),
+    ("reject_advocacy",  18),
+    ("forecast_suppress", 5),
+    ("holding_evidence",  7),
+    ("linden_evidence",   8),
+    ("quorum_met",       20),
+    ("compromise",        6),
+    ("debrief",          10),
+]
+_CINEMA_DELAYS = dict(CINEMA_PACING)
+_GATE_PACING_KEY = {"neutrality_rejected": "reject_advocacy", "prediction_blocked": "forecast_suppress"}
+
+
+def _jitter(seconds: float) -> float:
+    return max(0.0, seconds + random.uniform(-1, 1))
+
+
+async def _sleep(seconds: float) -> None:
+    """Indirection so tests can monkeypatch just this module's pacing sleeps,
+    without touching the global asyncio.sleep (which the MCP stdio transport
+    also uses internally)."""
+    await asyncio.sleep(seconds)
 
 
 def _load_fixture() -> dict:
@@ -41,46 +74,81 @@ async def _post(client, channel, blocks, text):
     await client.chat_postMessage(channel=channel, blocks=blocks, text=text)
 
 
-async def _post_beats(client, channel, result: dict, steelman_text: str):
-    """Post every DEMO_SCRIPT beat from a completed deliberation (replay or live)."""
+async def _post_beats(client, channel, result: dict, steelman_text: str, cinema: bool = False):
+    """Post every DEMO_SCRIPT beat from a completed deliberation (replay or live).
+
+    In cinema mode (replay only — see CINEMA_PACING), sleeps before each beat so
+    the recording plays at human pace instead of one burst. Fast mode (default)
+    is unchanged: no sleeps, identical timing to before cinema mode existed.
+    """
     delib, debrief = result["delib"], result["debrief"]
     audit = debrief["audit"]
     actions = [e["action"] for e in audit]
 
-    await _post(client, channel, render.reveal_blocks(delib["rounds"][0]["candidates"]),
-                "Reads are in.")
+    async def beat(key: str, blocks, text: str):
+        if cinema:
+            await _sleep(_jitter(_CINEMA_DELAYS[key]))
+        await _post(client, channel, blocks, text)
+
+    await beat("reveal_camps", render.reveal_blocks(delib["rounds"][0]["candidates"]),
+              "Reads are in.")
     if any(r["cross_inhibition_fired"] for r in delib["rounds"]):
-        await _post(client, channel, render.wiki(
+        await beat("cross_inhibition", render.wiki(
             "cross-inhibition — resisting premature consensus"), "cross-inhibition")
+
+    # One sleep covers the pair: the rule-label is Wiki's (deterministic trigger),
+    # the quote is Vicky's (language work) — makes the order visibly Wiki's, not
+    # Vicky's whim (mirrors the cross-inhibition line's style).
+    if cinema:
+        await _sleep(_jitter(_CINEMA_DELAYS["steelman"]))
+    await _post(client, channel, render.wiki(
+        "minority steelmanning — strongest form of the least-supported view"), "steelman rule")
     await _post(client, channel, render.vicky(
         "Strongest version of the least-supported view, for fair consideration:")
         + [{"type": "section", "text": {"type": "mrkdwn", "text": f"> {steelman_text}"}}],
         "minority steelman")
+
     for action in ("neutrality_rejected", "prediction_blocked"):
         if action in actions:
-            await _post(client, channel, render.wiki_strike(render.strike_line_for(action)),
-                        "gate strike")
+            await beat(_GATE_PACING_KEY[action], render.wiki_strike(render.strike_line_for(action)),
+                      "gate strike")
     if debrief.get("injected_evidence"):
         ev = debrief["injected_evidence"][0]
-        await _post(client, channel, render.wiki("HOLDING quorum · requesting evidence at deadlock"),
-                    "holding")
-        await _post(client, channel,
-                    render.neutral_evidence(ev["handle"], ev["text"], ev["source"]), "evidence")
+        await beat("holding_evidence",
+                   render.wiki("HOLDING quorum · requesting evidence at deadlock"), "holding")
+        await beat("linden_evidence",
+                   render.neutral_evidence(ev["handle"], ev["text"], ev["source"]), "evidence")
     if delib["reached_quorum"]:
-        await _post(client, channel, render.wiki(
+        await beat("quorum_met", render.wiki(
             f"QUORUM MET · cross-group support high · audit: {len(audit)} events"), "quorum")
-        await _post(client, channel, render.vicky(
+        await beat("compromise", render.vicky(
             f"The compromise nobody walked in with:\n> {debrief['winner']}"), "winner")
-    await _post(client, channel, render.debrief_blocks(), "Debrief")
+    await beat("debrief", render.debrief_blocks(), "Debrief")
 
 
-async def _run_replay_or_report(client, channel: str, user_id: str, fx: dict) -> None:
+async def _run_replay_or_report(client, channel: str, user_id: str, fx: dict,
+                                cinema: bool = False) -> None:
     """`/decide replay`: run the recorded demo and post its beats. Never fails
-    silently on camera — any error is reported as an ephemeral to the invoker."""
-    await _post(client, channel, render.vicky("Replaying the recorded deliberation…"), "replay")
+    silently on camera — any error is reported as an ephemeral to the invoker.
+
+    Cinema mode plays the full narrative arc (consent card, handles, banner, then
+    the beats) at human pace per CINEMA_PACING, for a continuous screen recording.
+    It intentionally does NOT show the live "run the deliberation" button/modal —
+    that's live-mode UI plumbing, not part of the deliberation being replayed.
+    Fast mode (default) is unchanged: banner + beats only, no sleeps.
+    """
     try:
+        if cinema:
+            await _sleep(_jitter(_CINEMA_DELAYS["opener"]))
+            await _post(client, channel, render.consent_blocks(fx["topic"]), "A decision to make")
+            await _sleep(_jitter(_CINEMA_DELAYS["handles"]))
+            cast = [p["handle"] for p in fx["participants"]]
+            await _post(client, channel, render.handles_blocks(cast), "Handles assigned")
+            await _sleep(_jitter(_CINEMA_DELAYS["replay_banner"]))
+        await _post(client, channel, render.vicky("Replaying the recorded deliberation…"), "replay")
+
         result = await run_session_over_mcp(fx, session_id="slack-replay")
-        await _post_beats(client, channel, result, fx["steelman_text"])
+        await _post_beats(client, channel, result, fx["steelman_text"], cinema=cinema)
     except Exception as err:  # noqa: BLE001 — never fail silently on camera
         await client.chat_postEphemeral(channel=channel, user=user_id, text=f"Replay failed: {err}")
 
@@ -128,7 +196,8 @@ def build_app():
         _STATE.update(channel=channel, reads_by_handle={})
 
         if text.lower().startswith("replay"):
-            await _run_replay_or_report(client, channel, body["user_id"], fx)
+            await _run_replay_or_report(client, channel, body["user_id"], fx,
+                                        cinema=_STATE["cinema"])
             return
 
         _STATE["question"] = text or "How should we build our internal knowledge agent?"
@@ -200,6 +269,10 @@ async def _main() -> None:
     if _STATE["seed"]:
         print(f"[seed-personas] the live human plays '{_STATE['human_handle']}'; "
               f"the other four reads are seeded from the fixture.", flush=True)
+    if _STATE["cinema"]:
+        print("[cinema] /decide replay will play back at human pace "
+              f"(~{sum(d for _, d in CINEMA_PACING) // 60}:"
+              f"{sum(d for _, d in CINEMA_PACING) % 60:02d}, ±1s jitter per beat).", flush=True)
     app = build_app()
     handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     # Establish the socket, log a clear line, then stay up (survives detached).
@@ -218,6 +291,7 @@ def main() -> None:
     import sys
     _STATE["seed"] = "--seed-personas" in sys.argv
     _STATE["human_handle"] = os.environ.get("WIKI_HUMAN_HANDLE", "Cedar")
+    _STATE["cinema"] = "--cinema" in sys.argv or os.environ.get("WV_CINEMA") == "1"
     asyncio.run(_main())
 
 
